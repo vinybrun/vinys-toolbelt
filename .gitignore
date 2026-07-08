@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+build/
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json
+.credentials.json
+
+# Model weights / large artifacts
+models/
+*.gguf
+*.safetensors
+*.bin
+
+# Logs & scratch
+*.log
+logs/
+tmp/
+.DS_Store
+
+# Claude Code local state
+.claude/settings.local.json

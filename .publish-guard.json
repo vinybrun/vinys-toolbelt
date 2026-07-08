@@ -1,0 +1,60 @@
+{
+  "_comment": "Rules for scripts/publish-guard. Patterns are case-insensitive Python regexes. Add an inline '# publish-guard: allow <rule-id>' comment on a line to exempt it.",
+  "rules": [
+    {
+      "id": "personal-email",
+      "severity": "block",
+      "why": "Real email address. Use the GitHub noreply address instead.",
+      "pattern": "[a-z0-9._%+-]+@(?!users\\.noreply\\.github\\.com)(?!example\\.(com|org))[a-z0-9.-]+\\.[a-z]{2,}"
+    },
+    {
+      "id": "home-path",
+      "severity": "block",
+      "why": "Leaks the local username via an absolute home directory path.",
+      "pattern": "/home/[a-z0-9_-]+"
+    },
+    {
+      "id": "vendor-x",
+      "severity": "block",
+      "why": "Reveals use of X / xAI tooling.",
+      "pattern": "\\b(grok|xai|x\\.ai)\\b"
+    },
+    {
+      "id": "model-vendor",
+      "severity": "block",
+      "why": "Reveals which local or third-party models are in use.",
+      "pattern": "\\b(ollama|llama[._-]?\\d|mistral|deepseek|qwen|gemini)\\b"
+    },
+    {
+      "id": "model-id",
+      "severity": "block",
+      "why": "Reveals the exact model in use. Say 'the model' instead.",
+      "pattern": "\\b(claude-(opus|sonnet|haiku|fable)-[0-9a-z.-]+|gpt-[0-9][0-9a-z.-]*|o[13](-mini)?\\b)"
+    },
+    {
+      "id": "api-key",
+      "severity": "block",
+      "why": "Looks like a live credential.",
+      "pattern": "\\b(sk-ant-[a-z0-9_-]{16,}|sk-[a-z0-9]{32,}|xai-[a-z0-9]{16,}|gh[pousr]_[a-z0-9]{20,}|AKIA[0-9A-Z]{16}|glpat-[a-z0-9_-]{16,})"
+    },
+    {
+      "id": "private-key",
+      "severity": "block",
+      "why": "Private key material.",
+      "pattern": "-----BEGIN [A-Z ]*PRIVATE KEY-----"
+    },
+    {
+      "id": "bearer-token",
+      "severity": "block",
+      "why": "Hardcoded bearer/authorization token.",
+      "pattern": "authorization\\s*[:=]\\s*[\"']?(bearer|token)\\s+[a-z0-9._-]{12,}"
+    }
+  ],
+  "skip_paths": [
+    "^\\.git/",
+    "^\\.publish-guard\\.json$",
+    "^scripts/publish-guard$",
+    "\\.lock$",
+    "^docs/private/"
+  ]
+}

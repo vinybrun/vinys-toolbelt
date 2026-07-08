@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "vinys-toolbelt",
+  "description": "Personal AI tooling: skills, agents, hooks, MCP servers and executables for Claude Code.",
+  "owner": {
+    "name": "vinybrun",
+    "email": "141655859+vinybrun@users.noreply.github.com"
+  },
+  "plugins": [
+    {
+      "name": "ai-toolbelt",
+      "source": "./plugins/ai-toolbelt",
+      "description": "Core AI toolbelt: skills, agents, hooks and bin/ executables.",
+      "category": "productivity"
+    }
+  ]
+}

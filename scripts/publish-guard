@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+"""Block personal or private information from reaching a public remote.
+
+Scans file contents against the rules in .publish-guard.json, and audits git
+commit metadata for real author emails.
+
+    publish-guard              scan tracked files in the working tree
+    publish-guard --staged     scan staged content (used by the pre-commit hook)
+    publish-guard --history    audit commit author/committer emails
+    publish-guard --all        all of the above (used by the pre-push hook)
+
+Exempt a single line by appending:  publish-guard: allow <rule-id>
+"""
+
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+CONFIG = ROOT / ".publish-guard.json"
+ALLOW_RE = re.compile(r"publish-guard:\s*allow\s+([a-z0-9,\s-]+)", re.I)
+
+
+def sh(*args: str) -> str:
+    return subprocess.run(
+        args, cwd=ROOT, capture_output=True, text=True, check=True
+    ).stdout
+
+
+def load_config():
+    cfg = json.loads(CONFIG.read_text())
+    rules = [
+        (r["id"], re.compile(r["pattern"], re.I), r["why"]) for r in cfg["rules"]
+    ]
+    skips = [re.compile(p) for p in cfg["skip_paths"]]
+    return rules, skips
+
+
+def redact(line: str, limit: int = 100) -> str:
+    line = line.strip()
+    return line if len(line) <= limit else line[:limit] + "…"
+
+
+def scan_text(path: str, text: str, rules) -> list[str]:
+    findings = []
+    for lineno, line in enumerate(text.splitlines(), 1):
+        allowed = set()
+        if m := ALLOW_RE.search(line):
+            allowed = {t.strip() for t in m.group(1).replace(",", " ").split()}
+        for rid, pat, why in rules:
+            if rid in allowed:
+                continue
+            if pat.search(line):
+                findings.append(f"  {path}:{lineno}  [{rid}] {why}\n      {redact(line)}")
+    return findings
+
+
+def tracked_files(staged: bool) -> list[str]:
+    if staged:
+        out = sh("git", "diff", "--cached", "--name-only", "--diff-filter=ACM")
+    else:
+        out = sh("git", "ls-files")
+    return [f for f in out.splitlines() if f]
+
+
+def read_blob(path: str, staged: bool) -> str | None:
+    """Staged content comes from the index, not the worktree."""
+    try:
+        if staged:
+            raw = subprocess.run(
+                ["git", "show", f":{path}"],
+                cwd=ROOT, capture_output=True, check=True,
+            ).stdout
+        else:
+            raw = (ROOT / path).read_bytes()
+        if b"\0" in raw[:8000]:
+            return None  # binary
+        return raw.decode("utf-8", errors="replace")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+
+def scan_files(staged: bool, rules, skips) -> list[str]:
+    findings = []
+    for path in tracked_files(staged):
+        if any(s.search(path) for s in skips):
+            continue
+        text = read_blob(path, staged)
+        if text is None:
+            continue
+        findings += scan_text(path, text, rules)
+    return findings
+
+
+def scan_history() -> list[str]:
+    try:
+        out = sh("git", "log", "--format=%H%x00%an <%ae>%x00%cn <%ce>")
+    except subprocess.CalledProcessError:
+        return []  # no commits yet
+    bad = []
+    for line in out.splitlines():
+        if not line:
+            continue
+        sha, author, committer = line.split("\0")
+        for role, ident in (("author", author), ("committer", committer)):
+            if "@" in ident and "users.noreply.github.com" not in ident:
+                bad.append(
+                    f"  commit {sha[:9]}  [commit-email] real {role} email in git metadata\n"
+                    f"      {ident}"
+                )
+    return bad
+
+
+def main() -> int:
+    args = set(sys.argv[1:])
+    do_all = "--all" in args
+    staged = "--staged" in args
+    history = "--history" in args or do_all
+    files = do_all or staged or not history
+
+    rules, skips = load_config()
+    findings = []
+    if files:
+        findings += scan_files(staged, rules, skips)
+    if history:
+        findings += scan_history()
+
+    if not findings:
+        scope = "staged content" if staged else "tracked files"
+        print(f"publish-guard: clean ({scope}{' + history' if history else ''})")
+        return 0
+
+    print(f"publish-guard: {len(findings)} finding(s) — refusing to proceed\n")
+    print("\n".join(findings))
+    print(
+        "\nFix, or exempt a specific line with a trailing"
+        " `publish-guard: allow <rule-id>` comment."
+        "\nTo bypass entirely (not recommended): git ... --no-verify"
+    )
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

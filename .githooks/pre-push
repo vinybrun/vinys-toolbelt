@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Last line of defence: the whole tree plus every commit's author metadata.
+set -euo pipefail
+exec "$(git rev-parse --show-toplevel)/scripts/publish-guard" --all

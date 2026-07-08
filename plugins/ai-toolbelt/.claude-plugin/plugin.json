@@ -1,0 +1,9 @@
+{
+  "name": "ai-toolbelt",
+  "description": "Core AI toolbelt: skills, agents, hooks and bin/ executables.",
+  "author": {
+    "name": "vinybrun",
+    "email": "141655859+vinybrun@users.noreply.github.com"
+  },
+  "keywords": ["ai", "agents", "workflow"]
+}
