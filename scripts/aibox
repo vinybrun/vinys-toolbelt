@@ -1,0 +1,431 @@
+#!/usr/bin/env bash
+# aibox — disposable rootless-podman sandboxes that clone a repo and run a coding
+# agent CLI inside it.
+#
+#   aibox example https://github.com/your/repo
+#     New env + container. Shallow-clones the repo, installs the agent, launches it here.
+#
+#   aibox 3 same example https://github.com/your/repo
+#     Same across N containers. Opens one terminal per container (titled "<folder>-<i> <model>")
+#     and launches the agent in each; the launching terminal becomes a control panel.
+#
+#   aibox 3 multi example https://github.com/your/repo      # "multi" is the default, may be omitted
+#     Same, but each container runs a different model (cycles through AIBOX_CMDS).
+#
+#   utils: build | up NAME | shell NAME | run NAME -- CMD | ls | stop NAME|all | reset NAME
+#          purge [-y]  — clean slate: removes every container and every env folder, and
+#                        reclaims disk, but KEEPS the base image so new envs start fast
+#                        (no re-download/rebuild). Add --all/-a to also delete the image
+#                        (full wipe). Prompts for confirmation unless -y/--yes is given.
+#
+#   Which agent runs, and where sandbox data lives, come from the config file at
+#   ~/.config/aibox/config — nothing machine- or vendor-specific lives in this script.
+#
+#   made by vinybrun
+
+set -euo pipefail
+
+# ── Config ──────────────────────────────────────────────────────────────────
+# Machine-specific settings live outside the repo. Environment variables win over
+# the file, so `AIBOX_ROOT=/tmp/x aibox ls` works for one-off runs.
+CONFIG="${AIBOX_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/aibox/config}"
+# shellcheck source=/dev/null
+[ -r "$CONFIG" ] && . "$CONFIG"
+
+# Data root: the podman store and every env folder hang off this. It defaults to the
+# script's own directory, but MUST be set explicitly once the script lives somewhere
+# other than its data (e.g. checked into a repo and symlinked back). Resolving through
+# symlinks here would otherwise point ROOT at the repo and silently strand the store.
+ROOT="${AIBOX_ROOT:-$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)}"
+
+# Agent CLI to install and run inside each sandbox.
+#   AGENT_HOME     dotdir the agent keeps its install/auth in, bind-mounted from the host
+#   INSTALL_CMD    installs the agent (empty = the image already provides it)
+#   UPDATE_CMD     optional post-install update step
+AGENT_HOME="${AIBOX_AGENT_HOME:-.agent}"
+INSTALL_CMD="${AIBOX_INSTALL_CMD:-}"
+UPDATE_CMD="${AIBOX_UPDATE_CMD:-}"
+
+IMAGE="aibox:latest"
+# Shared bridge network so every sandbox can see the others. On a *named* podman
+# network (unlike the rootless default netns) netavark wires the containers to one
+# bridge and aardvark-dns resolves them by name, so `curl aibox-example-1` or the
+# short hostname just works between sandboxes. Created on demand (see ensure_network).
+NETWORK="aibox-net"
+
+# Persistent podman state (graphroot: images/layers/containers) lives in-folder so
+# the sandbox replicates by copying this dir. runroot (per-boot locks/runtime state)
+# and the build context are transient — they stay on the default tmpfs/$TMPDIR.
+STORE="$ROOT/.podman"
+mkdir -p "$STORE/storage"
+# In-folder graphroot applied to every podman call. Kept as explicit flags (not a
+# storage.conf) so the system's rootless-overlay settings are preserved. NOTE: the
+# flags are repeated on the `exec podman` calls below — `exec` runs the real binary
+# and bypasses this shell function, so it would otherwise hit the default store.
+PODMAN_OPTS=(--root "$STORE/storage")
+podman() { command podman "${PODMAN_OPTS[@]}" "$@"; }
+
+# Stop a container, ignoring if it's already gone. Used to tie a container's
+# lifecycle to its attached terminal (see attach_exec).
+stop_container() { podman stop -t 3 -i "$1" >/dev/null 2>&1 || true; }
+
+# Strip a trailing slash from a NAME/FOLDER arg — tab-completing a directory
+# appends one (e.g. `aibox Jun30-1/`), but env/container names never have it.
+strip_slash() { printf '%s' "${1%/}"; }
+
+# ── Launch commands ─────────────────────────────────────────────────────────
+# Set AIBOX_CMDS in the config file. Runs inside each env, in the cloned repo's
+# dir. 'same' uses the first entry for every env; 'multi' (default) cycles through
+# them in order, rolling over when there are more envs than entries. Single-env
+# launches use the first.
+CMDS=("${AIBOX_CMDS[@]:-bash}")
+
+# per-sandbox resource caps
+MEM="4g"
+CPUS="2"
+PIDS="4096"
+
+# Image is defined inline (no separate Containerfile needed). Empty context = fast build.
+build() {
+  local ctx; ctx="$(mktemp -d)"
+  podman build -t "$IMAGE" --build-arg "AGENT_HOME=$AGENT_HOME" -f - "$ctx" <<'CONTAINERFILE'
+FROM ubuntu:24.04
+ARG AGENT_HOME=.agent
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates curl wget git git-lfs openssh-client \
+        build-essential cmake clang lld gdb pkg-config \
+        python3 python3-pip python3-venv nodejs npm jq nano less \
+        tig git-delta \
+    && rm -rf /var/lib/apt/lists/*
+# GitHub CLI (gh) from GitHub's official apt repo — not in the Ubuntu archives.
+RUN mkdir -p -m 755 /etc/apt/keyrings \
+    && wget -nv -O /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+         https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+         > /etc/apt/sources.list.d/github-cli.list \
+    && apt-get update && apt-get install -y --no-install-recommends gh \
+    && rm -rf /var/lib/apt/lists/*
+# Enable Git LFS globally and make delta the default git pager (nicer diffs).
+RUN git lfs install --system \
+    && git config --system core.pager 'delta' \
+    && git config --system interactive.diffFilter 'delta --color-only' \
+    && git config --system delta.navigate true
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh || true
+# Rust toolchain via rustup (stable). Installs to /root/.cargo + /root/.rustup in
+# the image's own layer (not bind-mounted), so it's baked into the base image.
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+        | sh -s -- -y --default-toolchain stable --profile default
+# The agent (~/$AGENT_HOME/bin), cargo (/root/.cargo/bin) and any future
+# ~/.local/bin tool installs are on PATH at the image level — works for every entry
+# point (exec, shell, attach) regardless of what's in the container's own writable
+# layer. (~/$AGENT_HOME is bind-mounted from the host; see ensure_up.)
+ENV PATH="/root/${AGENT_HOME}/bin:/root/.cargo/bin:/root/.local/bin:${PATH}"
+WORKDIR /work
+CMD ["/bin/bash"]
+CONTAINERFILE
+  local rc=$?; rm -rf "$ctx"; return $rc
+}
+
+ensure_image() {
+  podman image exists "$IMAGE" || { echo "Image not built yet — running build..."; build; }
+}
+
+# Create the shared bridge network if it doesn't exist yet. Idempotent — safe to
+# call before every run. aardvark-dns comes for free on a named network, giving
+# name-based resolution between all attached sandboxes.
+ensure_network() {
+  podman network exists "$NETWORK" || podman network create "$NETWORK" >/dev/null
+}
+
+# ensure_up CNAME WORKDIR — create+start the container if missing, else just start it.
+ensure_up() {
+  local cname="$1" work="$2"
+  if podman container exists "$cname"; then
+    # Start it back up. If start fails it's almost always because the transient
+    # runroot (/run/user/<uid>, tmpfs) was cleared by a reboot, so podman can no
+    # longer recreate the container's runtime userdata — symptom: "creating
+    # resolv.conf ... no such file or directory". Left unhandled this used to
+    # surface downstream as the misleading "can only create exec sessions on
+    # running containers" from the following `podman exec`. Everything durable
+    # lives in bind mounts (/work, ~/$AGENT_HOME, ~/.claude, ~/.claude.json) and the
+    # base image, so tearing the container down and recreating it below is
+    # lossless — fall through to the create path instead of swallowing the error.
+    if podman start "$cname" >/dev/null 2>&1; then
+      return
+    fi
+    echo ">> ${cname#aibox-}: stale runtime state (reboot?) — recreating container ..." >&2
+    podman rm -f -i "$cname" >/dev/null 2>&1 || true
+  fi
+  mkdir -p "$work"
+  # Agent tool state — the agent's install dir (~/$AGENT_HOME) and Claude Code's
+  # config (~/.claude, ~/.claude.json) — lives in an agents/ folder next to work/,
+  # bind-mounted into the container's $HOME. Previously this sat in the
+  # container's writable layer only, so recreating the container (new image,
+  # resource bump, etc.) silently wiped installed tools and session/auth data.
+  # Host dir is the dotdir without its leading dot: .foo -> agents/foo.
+  local agents="${work%/work}/agents"
+  local agent_dir="${AGENT_HOME#.}"
+  mkdir -p "$agents/$agent_dir" "$agents/claude"
+  touch "$agents/claude.json"
+  # Skip the agent mount when AGENT_HOME is .claude — it would collide with the
+  # Claude Code mount below. (`cond && arr=(…)` would return 1 here and trip set -e.)
+  local agent_mount=()
+  if [ "$AGENT_HOME" != ".claude" ]; then
+    agent_mount=(-v "$agents/$agent_dir:/root/$AGENT_HOME:Z")
+  fi
+  # Pass /dev/kvm through when the host has it (loaded kvm module, mode 0666 via
+  # udev) so x86_64 emulators (Android AVD, QEMU) get hardware acceleration.
+  # No-op cost when absent or unneeded.
+  # (`cond && arr=(…)` returns 1 when absent, which would trip set -e.)
+  local kvm_dev=()
+  if [ -e /dev/kvm ]; then kvm_dev=(--device /dev/kvm); fi
+  ensure_network
+  # Hostname derived from the env's folder name (single: NAME; fan-out: FOLDER-i).
+  # Set as BOTH the container hostname and a network-alias: aardvark-dns resolves
+  # the alias, so sandboxes reach each other by this name (e.g. `curl example-2`,
+  # `ssh mybranch-1`) instead of by IP. It stays distinct per container so names
+  # don't collide on the shared network.
+  local host="${cname#aibox-}"
+  podman run -d --name "$cname" \
+    --hostname "$host" \
+    --network "$NETWORK" --network-alias "$host" \
+    --init \
+    --memory "$MEM" --cpus "$CPUS" --pids-limit "$PIDS" \
+    --security-opt no-new-privileges \
+    --cap-drop SYS_ADMIN --cap-drop NET_ADMIN --cap-drop NET_RAW \
+    "${kvm_dev[@]}" \
+    -v "$work:/work:Z" \
+    "${agent_mount[@]}" \
+    -v "$agents/claude:/root/.claude:Z" \
+    -v "$agents/claude.json:/root/.claude.json:Z" \
+    "$IMAGE" sleep infinity >/dev/null
+}
+
+# provision CNAME [REPO] — install the agent, optionally clone REPO into /work
+# (fresh containers only). Install/update commands come from the config file.
+provision() {
+  local cname="$1" repo="${2:-}"
+  if [ -n "$INSTALL_CMD" ]; then
+    echo ">> installing agent in ${cname#aibox-} ..."
+    podman exec "$cname" bash -lc "$INSTALL_CMD"
+  fi
+  if [ -n "$UPDATE_CMD" ]; then
+    echo ">> updating agent ..."
+    podman exec "$cname" bash -lc "$UPDATE_CMD" || echo "!! agent update failed (continuing)"
+  fi
+  if [ -n "$repo" ]; then
+    echo ">> cloning $repo ..."
+    podman exec "$cname" bash -lc "cd /work && git clone --depth 1 '$repo'"
+  fi
+}
+
+# Safety default if AIBOX_CMDS was set but empty.
+[ "${#CMDS[@]}" -gt 0 ] || CMDS=("bash")
+
+# attach_exec CNAME SUB CMD — enter container, cd into repo, run CMD, then shell.
+# The container's lifecycle is tied to this terminal: when the session ends — the
+# shell exits (Ctrl-D), or the window/terminal is closed (SIGHUP) — the container
+# is stopped. We deliberately do NOT `exec` here so the script regains control and
+# its EXIT trap can run the cleanup. HUP/TERM route through `exit` so the EXIT trap
+# fires for those too. (`shell`/`run` stay non-destructive — they're for poking at a
+# container while its agent window is still open.)
+attach_exec() {
+  local cname="$1" sub="${2:-}" gcmd="${3:-${CMDS[0]}}"
+  trap "stop_container '$cname'" EXIT
+  trap 'exit' HUP TERM
+  command podman "${PODMAN_OPTS[@]}" exec -it -e SUB="$sub" -e GCMD="$gcmd" "$cname" bash -lc '
+    export PATH="$HOME/.local/bin:/usr/local/bin:$HOME/bin:$PATH"
+    if [ -n "$SUB" ] && [ -d "/work/$SUB" ]; then cd "/work/$SUB"; else cd /work; fi
+    eval "$GCMD" || echo "!! launch command failed: $GCMD"
+    exec bash
+  ' || true
+}
+
+# model_of CMD — echo the value after -m/--model in CMD, else the command's name.
+model_of() {
+  local prev="" tok
+  for tok in $1; do
+    case "$prev" in -m|--model) printf '%s' "$tok"; return ;; esac
+    prev="$tok"
+  done
+  printf '%s' "${1%% *}"
+}
+
+# spawn_window CNAME SUB CMD TITLE — open a new kitty window attached to the env.
+# Returns 0 on launch, non-zero if kitty is missing or the spawn failed (caller reports).
+spawn_window() {
+  local cname="$1" sub="${2:-}" gcmd="$3" title="$4" err
+  command -v kitty >/dev/null 2>&1 || return 1
+  err="$(kitty --detach --title "$title" "$ROOT/aibox" __attach "$cname" "$sub" "$gcmd" 2>&1 >/dev/null)" && return 0
+  [ -n "$err" ] && echo "        kitty: $err" >&2
+  return 1
+}
+
+# open_env NAME [REPO] — single sandbox.
+open_env() {
+  local name; name="$(strip_slash "$1")"
+  local repo="${2:-}"
+  [ -n "$name" ] || { echo "usage: aibox NAME [REPO]" >&2; exit 1; }
+  ensure_image
+  local cname="aibox-$name" work="$ROOT/$name/work" fresh=0
+  podman container exists "$cname" || fresh=1
+  ensure_up "$cname" "$work"
+  [ "$fresh" = 1 ] && provision "$cname" "$repo"
+  local sub=""; [ -n "$repo" ] && sub="$(basename "$repo" .git)"
+  echo ">> '$name' [model: $(model_of "${CMDS[0]}")]  —  re-launch: aibox $name${repo:+ $repo}"
+  echo ">> opening in this terminal: ${CMDS[0]}"
+  attach_exec "$cname" "$sub" "${CMDS[0]}"
+}
+
+# multi N [same|multi] FOLDER [REPO] — fan out N clones, one kitty window each.
+multi() {
+  local n="$1"; shift
+  local mode="multi"
+  if [ "${1:-}" = "same" ] || [ "${1:-}" = "multi" ]; then mode="$1"; shift; fi
+  local folder; folder="$(strip_slash "${1:?usage: aibox <N> [same|multi] <folder> [REPO]}")"; shift
+  local repo="${1:-}"
+  ensure_image
+  local count="${#CMDS[@]}"
+  local sub=""; [ -n "$repo" ] && sub="$(basename "$repo" .git)"
+
+  echo "== '$folder': $n env(s), mode=$mode, $count launch command(s) configured =="
+  local i cname work fresh
+  for ((i=1; i<=n; i++)); do
+    cname="aibox-$folder-$i"; work="$ROOT/$folder/$i/work"; fresh=0
+    podman container exists "$cname" || fresh=1
+    ensure_up "$cname" "$work"
+    [ "$fresh" = 1 ] && provision "$cname" "$repo"
+  done
+
+  # cmd_for i — resolve the launch command for env i (multi cycles+rolls over; same = first).
+  local gcmd model id
+  cmd_for() { if [ "$mode" = "same" ]; then printf '%s' "${CMDS[0]}"; else printf '%s' "${CMDS[$((($1-1)%count))]}"; fi; }
+
+  # N<=1: open in THIS terminal (and print how to re-launch it).
+  if [ "$n" -le 1 ]; then
+    gcmd="$(cmd_for 1)"
+    echo ">> '$folder-1' [model: $(model_of "$gcmd")]  —  re-launch: aibox 1 $mode $folder${repo:+ $repo}"
+    echo ">> opening in this terminal: $gcmd"
+    attach_exec "aibox-$folder-1" "$sub" "$gcmd"
+    return
+  fi
+
+  # N>=2: spawn one kitty window per env; this terminal becomes the control panel.
+  local failed=0
+  echo; echo "spawning $n windows — access each container with:"
+  for ((i=1; i<=n; i++)); do
+    gcmd="$(cmd_for "$i")"; model="$(model_of "$gcmd")"; id="$folder-$i"
+    if spawn_window "aibox-$folder-$i" "$sub" "$gcmd" "$id $model"; then
+      printf '   %-24s [%s]\n        access: aibox shell %s\n' "$id" "$model" "$id"
+    else
+      failed=1
+      printf '   %-24s [%s]  !! window did NOT open\n        run here: aibox __attach aibox-%s %q %q\n' \
+        "$id" "$model" "$folder-$i" "$sub" "$gcmd"
+    fi
+  done
+  if [ "$failed" = 1 ]; then
+    echo; echo "!! one or more windows failed (kitty missing or spawn error)."
+    echo "   Containers are up — use the 'aibox __attach …' line(s) above to launch them in any terminal."
+  fi
+}
+
+cmd="${1:-}"; shift || true
+case "$cmd" in
+  build) build ;;
+  shell)
+    n="$(strip_slash "${1:?usage: aibox shell NAME}")"; ensure_image; ensure_up "aibox-$n" "$ROOT/$n/work"
+    exec command podman "${PODMAN_OPTS[@]}" exec -it "aibox-$n" bash
+    ;;
+  up)
+    n="$(strip_slash "${1:?usage: aibox up NAME}")"; ensure_image; ensure_up "aibox-$n" "$ROOT/$n/work"; echo "sandbox $n up" ;;
+  run)
+    n="$(strip_slash "${1:?usage: aibox run NAME -- CMD}")"; shift
+    [ "${1:-}" = "--" ] && shift
+    ensure_image; ensure_up "aibox-$n" "$ROOT/$n/work"
+    exec command podman "${PODMAN_OPTS[@]}" exec -it "aibox-$n" "$@"
+    ;;
+  __attach) attach_exec "${1:?}" "${2:-}" "${3:-${CMDS[0]}}" ;;
+  ls|list) podman ps --filter "name=aibox-" --format "table {{.Names}}\t{{.Status}}\t{{.Image}}" ;;
+  -h|--help|help) sed -n '2,24p' "$(readlink -f "${BASH_SOURCE[0]}")" | sed 's/^# \{0,1\}//' ;;
+  stop)
+    if [ "${1:-}" = "all" ]; then
+      mapfile -t names < <(podman ps -a --filter "name=aibox-" --format '{{.Names}}')
+      [ "${#names[@]}" -gt 0 ] && podman stop -i "${names[@]}" >/dev/null 2>&1 || true; echo "stopped all";
+    else podman stop -i "aibox-$(strip_slash "${1:?usage: aibox stop NAME|all}")"; fi ;;
+  reset)
+    n="$(strip_slash "${1:?usage: aibox reset NAME}")"
+    podman rm -f -i "aibox-$n" >/dev/null 2>&1 || true
+    rm -rf "${ROOT:?}/$n/work"
+    echo "sandbox $n wiped"
+    ;;
+  purge)
+    # Clean slate, but keep the base image so re-creating envs is fast (default), or a
+    # total wipe with --all/-a. Always:
+    #   1. remove every aibox container (frees per-container rootfs — the multi-GB part)
+    #   2. prune leftover store cruft (dangling layers, build cache, volumes)
+    #   3. delete every env folder (cloned repos + agent output)
+    # Default KEEPS $IMAGE (next launch reuses it, no re-download/rebuild).
+    # With --all/-a, the image is deleted too (next launch rebuilds it from scratch).
+    wipe_image=""
+    for a in "$@"; do
+      case "$a" in
+        -y|--yes) yes=1 ;;
+        -a|--all) wipe_image=1 ;;
+      esac
+    done
+    if [ "${yes:-}" != 1 ]; then
+      if [ -n "$wipe_image" ]; then
+        printf '!! purge --all deletes ALL aibox containers, the base image, and every env\n   folder (cloned repos + agent output). The image will be rebuilt next launch.\nContinue? [y/N] '
+      else
+        printf '!! purge removes ALL aibox containers and every env folder (cloned repos +\n   agent output). The base image (%s) is kept so new envs start fast.\nContinue? [y/N] ' "$IMAGE"
+      fi
+      read -r reply || reply=""
+      case "$reply" in y|Y|yes|YES) ;; *) echo "aborted — nothing changed."; exit 0 ;; esac
+    fi
+    # du can exit non-zero on unreadable rootless-overlay layer dirs (still prints the
+    # total) — guard so pipefail/set -e don't abort the purge over a cosmetic size report.
+    before="$(du -sh "$STORE" 2>/dev/null | cut -f1)" || before="?"
+    echo ">> removing all aibox containers ..."
+    mapfile -t names < <(podman ps -a --filter "name=aibox-" --format '{{.Names}}')
+    if [ "${#names[@]}" -gt 0 ]; then podman rm -f -i "${names[@]}" >/dev/null 2>&1 || true; fi
+    if [ -n "$wipe_image" ]; then
+      echo ">> wiping in-folder podman store ($STORE, was ${before:-?}) ..."
+      podman system reset --force >/dev/null 2>&1 || true
+      rm -rf "${STORE:?}/storage"
+      mkdir -p "$STORE/storage"
+    else
+      # Keep the base image: a plain prune only drops dangling (untagged) layers, so the
+      # tagged $IMAGE survives while old rebuild layers, build cache and volumes are freed.
+      echo ">> pruning store (keeping base image $IMAGE; was ${before:-?}) ..."
+      podman container prune -f >/dev/null 2>&1 || true
+      podman image prune -f >/dev/null 2>&1 || true
+      podman volume prune -f >/dev/null 2>&1 || true
+      podman system prune -f >/dev/null 2>&1 || true
+    fi
+    echo ">> deleting env folders ..."
+    # Env folders are the top-level dirs holding a work/ (single: <name>/work,
+    # fan-out: <folder>/<i>/work). Dotdirs (.podman/.claude) and the aibox script
+    # are never matched by the */ glob.
+    shopt -s nullglob
+    for d in "$ROOT"/*/; do
+      if find "$d" -maxdepth 2 -type d -name work 2>/dev/null | grep -q .; then
+        rm -rf "$d"
+      fi
+    done
+    if [ -n "$wipe_image" ]; then
+      echo "purged — no trace left (image gone; next launch rebuilds it)."
+    else
+      echo "purged — containers + env folders gone; base image kept (next launch starts fast)."
+    fi
+    ;;
+  "") echo "usage: aibox NAME [REPO] | aibox <N> [same|multi] FOLDER [REPO]" >&2; exit 1 ;;
+  -*)
+    # An unrecognised flag would otherwise be taken as an env NAME, creating a
+    # sandbox and an env folder literally called e.g. "--help".
+    echo "aibox: unknown option '$cmd' — see 'aibox --help'" >&2; exit 1 ;;
+  *)
+    if [[ "$cmd" =~ ^[0-9]+$ ]]; then multi "$cmd" "$@"; else open_env "$cmd" "${1:-}"; fi
+    ;;
+esac

@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Enables KVM on this host so x86_64 emulators (Android AVD) can get hardware
+# acceleration inside aibox's rootless-podman containers.
+# Run with: sudo ./scripts/enable-kvm
+set -uo pipefail
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "must run as root: sudo $0" >&2
+  exit 1
+fi
+
+CPU_VENDOR="$(grep -m1 -o 'vmx\|svm' /proc/cpuinfo || true)"
+case "$CPU_VENDOR" in
+  vmx) MOD="kvm_intel" ;;
+  svm) MOD="kvm_amd" ;;
+  *) echo "no vmx/svm flag in /proc/cpuinfo — CPU virtualization extensions" \
+          "may be disabled in BIOS/UEFI. Aborting." >&2; exit 1 ;;
+esac
+
+echo ">> step 1: plain modprobe $MOD (no nested) ..."
+if modprobe "$MOD" 2>/tmp/kvm-modprobe-err; then
+  echo "   ok"
+else
+  echo "   FAILED:"; cat /tmp/kvm-modprobe-err
+  echo
+  echo "This is almost always AMD-V / SVM Mode being disabled in the BIOS/UEFI,"
+  echo "even though /proc/cpuinfo lists the 'svm' flag (that flag just means the"
+  echo "silicon supports it, not that firmware has it switched on)."
+  echo
+  echo "Recent dmesg lines (if readable):"
+  dmesg 2>/dev/null | tail -20 || echo "  (dmesg not readable)"
+  echo
+  echo "Next step: reboot into BIOS/UEFI setup and enable 'SVM Mode' /"
+  echo "'AMD-V' (sometimes under CPU/Advanced/Security settings), save, boot"
+  echo "back into Fedora, then re-run this script."
+  exit 1
+fi
+
+echo ">> step 2: reload with nested=1 ..."
+modprobe -r "$MOD" 2>/dev/null || true
+if modprobe "$MOD" nested=1 2>/tmp/kvm-modprobe-err2; then
+  echo "   ok (nested virt on)"
+else
+  echo "   plain load worked but nested=1 did not — continuing without nested:"
+  cat /tmp/kvm-modprobe-err2
+  modprobe "$MOD"
+fi
+
+echo ">> persisting across reboots ..."
+printf '%s\n' "$MOD" > /etc/modules-load.d/kvm.conf
+echo "options $MOD nested=1" > "/etc/modprobe.d/99-${MOD}-nested.conf"
+
+echo ">> verifying ..."
+if [ -e /dev/kvm ]; then
+  ls -l /dev/kvm
+  echo "OK: /dev/kvm present."
+else
+  echo "!! /dev/kvm still missing after modprobe — check 'dmesg | tail' as root." >&2
+  exit 1
+fi
