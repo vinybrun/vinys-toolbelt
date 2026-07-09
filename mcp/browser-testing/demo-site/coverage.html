@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MCP Coverage Harness</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .harness { max-width: 720px; margin: 2rem auto; padding: 1.5rem; }
+    .row { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+    #drag-src, #drag-dst {
+      width: 120px; height: 80px; border: 2px dashed var(--border);
+      display: grid; place-items: center; border-radius: 12px; user-select: none;
+    }
+    #drag-src { background: rgba(108,140,255,.2); cursor: grab; }
+    #drag-dst { background: rgba(61,214,198,.12); }
+    #drag-dst.over { border-color: var(--accent-2); }
+    #status { min-height: 1.5rem; color: var(--accent-2); }
+  </style>
+</head>
+<body data-page="coverage">
+  <main class="harness panel">
+    <h1>MCP Coverage Harness</h1>
+    <p class="muted" id="blurb">Widgets for exercising browser MCP tools.</p>
+    <div class="row">
+      <button type="button" id="btn-click" class="btn btn-primary">Click me</button>
+      <button type="button" id="btn-dbl" class="btn btn-secondary">Double-click me</button>
+      <button type="button" id="btn-dialog" class="btn btn-secondary">Show confirm</button>
+    </div>
+    <div class="field">
+      <label for="text-input">Text input</label>
+      <input id="text-input" name="text" placeholder="type here" />
+    </div>
+    <div class="field">
+      <label for="role-select">Role</label>
+      <select id="role-select" aria-label="Role select">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+        <option value="guest">Guest</option>
+      </select>
+    </div>
+    <div class="field">
+      <label><input id="agree" type="checkbox" /> I agree</label>
+    </div>
+    <div class="field">
+      <label for="file-input">Upload</label>
+      <input id="file-input" type="file" />
+    </div>
+    <div class="row">
+      <div id="drag-src" draggable="true" data-testid="drag-src">Drag me</div>
+      <div id="drag-dst" data-testid="drag-dst">Drop here</div>
+    </div>
+    <p id="status" role="status" aria-live="polite"></p>
+    <p><a href="index.html" id="home-link">Back home</a> · <a href="coverage.html#bottom" id="bottom-link">Jump bottom</a></p>
+    <div style="height: 400px"></div>
+    <p id="bottom">Bottom anchor</p>
+  </main>
+  <script>
+    const status = (t) => { document.getElementById('status').textContent = t; };
+    document.getElementById('btn-click').onclick = () => status('clicked');
+    document.getElementById('btn-dbl').ondblclick = () => status('dblclicked');
+    document.getElementById('btn-dialog').onclick = () => {
+      const ok = confirm('Proceed with coverage?');
+      status(ok ? 'dialog-ok' : 'dialog-cancel');
+    };
+    const src = document.getElementById('drag-src');
+    const dst = document.getElementById('drag-dst');
+    src.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', 'payload'));
+    dst.addEventListener('dragover', (e) => { e.preventDefault(); dst.classList.add('over'); });
+    dst.addEventListener('dragleave', () => dst.classList.remove('over'));
+    dst.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dst.classList.remove('over');
+      status('dropped:' + e.dataTransfer.getData('text/plain'));
+    });
+    document.getElementById('file-input').addEventListener('change', () => {
+      status('file:' + (document.getElementById('file-input').files[0]?.name || 'none'));
+    });
+  </script>
+</body>
+</html>

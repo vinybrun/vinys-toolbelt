@@ -1,0 +1,30 @@
+name: nebula-market-smoke
+base_url: http://127.0.0.1:8877
+tags: [smoke, demo-site, nebula]
+steps:
+  - action: goto
+    url: /
+  - action: expect_text
+    text: Nebula Market
+  - action: expect_text
+    text: Goods that glow
+  - action: click
+    selector: "#cta-shop"
+  - action: expect_url
+    url: "**/shop.html"
+  - action: expect_text
+    text: Aurora Desk Lamp
+  - action: fill
+    selector: "#search"
+    value: headphones
+  - action: expect_text
+    text: Pulse Headphones
+  - action: click
+    role: button
+    name: "Add Pulse Headphones to cart"
+  - action: click
+    selector: "#nav-cart"
+  - action: expect_text
+    text: Pulse Headphones
+  - action: expect_text
+    text: Order summary

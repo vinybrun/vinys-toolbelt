@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nebula Market — Home</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  
+</head>
+<body data-page="home">
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html" aria-label="Nebula Market home">
+        <span class="brand-mark" aria-hidden="true">✦</span>
+        Nebula Market
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="index.html">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="cart.html" class="cart-pill" id="nav-cart">
+          Cart <span class="count" data-cart-count>0</span>
+        </a>
+        <a href="login.html">Account</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+
+    <div class="container hero">
+      <div>
+        <div class="eyebrow">Spring collection · 2026</div>
+        <h1>Goods that glow a little longer</h1>
+        <p class="lead">Discover lamps, audio, stationery, and outdoor essentials — crafted for focus, travel, and quiet nights in.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="shop.html" id="cta-shop">Browse the shop</a>
+          <a class="btn btn-secondary" href="product.html?id=pulse-headphones">Featured: Pulse Headphones</a>
+        </div>
+      </div>
+      <div class="hero-card" aria-label="Highlights">
+        <h2 style="margin:0 0 .5rem;font-size:1.15rem">Why Nebula</h2>
+        <p class="muted" style="margin:0">Free shipping over $100 · 30-day returns · Carbon-neutral packing</p>
+        <div class="stat-grid">
+          <div class="stat"><strong>9</strong><span>curated products</span></div>
+          <div class="stat"><strong>4.9★</strong><span>demo rating</span></div>
+          <div class="stat"><strong>24h</strong><span>support SLA</span></div>
+          <div class="stat"><strong>0</strong><span>tracking cookies</span></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="container">
+      <div class="section-title">
+        <div>
+          <h2>Featured this week</h2>
+          <p>Hand-picked for the MCP demo flow</p>
+        </div>
+        <a href="shop.html">View all →</a>
+      </div>
+      <div class="grid-3" id="featured-products"></div>
+    </section>
+
+    <section class="container">
+      <div class="section-title">
+        <div>
+          <h2>Built for explorers</h2>
+          <p>Three reasons teams demo here</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="feature"><div class="icon">🧭</div><h3>Multi-page journeys</h3><p>Home → shop → product → cart → checkout with real validation.</p></div>
+        <div class="feature"><div class="icon">🛒</div><h3>Stateful cart</h3><p>localStorage cart, qty controls, free-shipping threshold.</p></div>
+        <div class="feature"><div class="icon">🔐</div><h3>Auth + contact</h3><p>Login demo credentials and accessible form patterns.</p></div>
+      </div>
+    </section>
+
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <strong style="color:var(--text)">Nebula Market</strong>
+        <p>Curated goods for explorers of the everyday. Demo storefront for browser MCP testing.</p>
+      </div>
+      <div>
+        <strong style="color:var(--text)">Explore</strong>
+        <p><a href="shop.html">All products</a><br/><a href="cart.html">Your cart</a></p>
+      </div>
+      <div>
+        <strong style="color:var(--text)">Support</strong>
+        <p><a href="contact.html">Contact</a><br/><a href="login.html">Sign in</a></p>
+      </div>
+    </div>
+  </footer>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -5,7 +5,8 @@
       "id": "personal-email",
       "severity": "block",
       "why": "Real email address. Use the GitHub noreply address instead.",
-      "pattern": "[a-z0-9._%+-]+@(?!users\\.noreply\\.github\\.com)(?!example\\.(com|org))[a-z0-9.-]+\\.[a-z]{2,}"
+      "_note": "Reserved TLDs (RFC 2606/6761) can never be real addresses, so fixture creds like demo@nebula.test are allowed. The trailing \\b stops the greedy TLD match from backtracking past the lookbehinds.",
+      "pattern": "[a-z0-9._%+-]+@(?!users\\.noreply\\.github\\.com)(?!example\\.(com|org))[a-z0-9.-]+\\.[a-z]{2,}\\b(?<!\\.test)(?<!\\.invalid)(?<!\\.localhost)(?<!\\.example)(?<!\\.local)"
     },
     {
       "id": "home-path",

@@ -1,0 +1,26 @@
+name: fixture-smoke
+base_url: http://127.0.0.1:8765
+tags: [smoke, fixture]
+steps:
+  - action: goto
+    url: /
+  - action: expect_text
+    text: Browser MCP Fixture
+  - action: click
+    role: link
+    name: Form
+  - action: fill
+    selector: "#name"
+    value: Ada
+  - action: fill
+    selector: "#email"
+    value: ada@example.com
+  - action: select
+    selector: "#role"
+    value: admin
+  - action: check
+    selector: "#terms"
+  - action: click
+    selector: "#submit"
+  - action: expect_text
+    text: "OK:Ada:ada@example.com:admin"

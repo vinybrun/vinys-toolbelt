@@ -33,3 +33,9 @@ tmp/
 
 # Claude Code local state
 .claude/settings.local.json
+
+# Rust / MCP server build + runtime output
+# (Cargo.lock is committed — these crates are binaries, not libraries.)
+target/
+browser-artifacts/
+node_modules/

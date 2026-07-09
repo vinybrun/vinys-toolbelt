@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Product · Nebula Market</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  
+</head>
+<body data-page="product">
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html" aria-label="Nebula Market home">
+        <span class="brand-mark" aria-hidden="true">✦</span>
+        Nebula Market
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="index.html">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="cart.html" class="cart-pill" id="nav-cart">
+          Cart <span class="count" data-cart-count>0</span>
+        </a>
+        <a href="login.html">Account</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+
+    <div class="container" style="padding-top:2rem">
+      <p class="muted"><a href="shop.html">← Back to shop</a></p>
+      <div class="product-hero">
+        <div class="product-visual" id="p-emoji" aria-hidden="true">✦</div>
+        <div>
+          <span class="tag" id="p-category">category</span>
+          <h1 id="p-name" style="margin:.5rem 0">Product</h1>
+          <p class="price" id="p-price">$0</p>
+          <p class="muted" id="p-blurb" style="max-width:36rem"></p>
+          <div class="field" style="max-width:120px;margin:1rem 0">
+            <label for="detail-qty">Quantity</label>
+            <input id="detail-qty" type="number" min="1" value="1" />
+          </div>
+          <button class="btn btn-primary" type="button" id="add-detail">Add to cart</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <strong style="color:var(--text)">Nebula Market</strong>
+        <p>Curated goods for explorers of the everyday. Demo storefront for browser MCP testing.</p>
+      </div>
+      <div>
+        <strong style="color:var(--text)">Explore</strong>
+        <p><a href="shop.html">All products</a><br/><a href="cart.html">Your cart</a></p>
+      </div>
+      <div>
+        <strong style="color:var(--text)">Support</strong>
+        <p><a href="contact.html">Contact</a><br/><a href="login.html">Sign in</a></p>
+      </div>
+    </div>
+  </footer>
+  <script src="js/app.js"></script>
+</body>
+</html>

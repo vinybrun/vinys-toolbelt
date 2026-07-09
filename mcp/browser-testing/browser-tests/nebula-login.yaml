@@ -1,0 +1,18 @@
+name: nebula-login
+base_url: http://127.0.0.1:8877
+tags: [auth, demo-site]
+steps:
+  - action: goto
+    url: /login.html
+  - action: fill
+    selector: "#email"
+    value: demo@nebula.test
+  - action: fill
+    selector: "#password"
+    value: nebula1
+  - action: click
+    selector: "#login-submit"
+  - action: expect_text
+    text: You are signed in
+  - action: expect_text
+    text: demo@nebula.test

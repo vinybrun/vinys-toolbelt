@@ -1,0 +1,29 @@
+name: nebula-checkout-flow
+base_url: http://127.0.0.1:8877
+tags: [checkout, demo-site]
+steps:
+  - action: goto
+    url: /shop.html
+  - action: click
+    role: button
+    name: "Add Aurora Desk Lamp to cart"
+  - action: click
+    selector: "#nav-cart"
+  - action: click
+    selector: "#checkout-link"
+  - action: fill
+    selector: "#fullName"
+    value: Ada Lovelace
+  - action: fill
+    selector: "#email"
+    value: ada@nebula.test
+  - action: fill
+    selector: "#address"
+    value: 42 Analytical Engine Rd
+  - action: fill
+    selector: "#city"
+    value: London
+  - action: click
+    selector: "#place-order"
+  - action: expect_text
+    text: Order confirmed

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Browser MCP Fixture</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; }
+    .hidden { display: none; }
+    #toast { position: fixed; bottom: 1rem; right: 1rem; background: #222; color: #fff; padding: 0.75rem 1rem; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Browser MCP Fixture</h1>
+  <nav aria-label="Main">
+    <a href="#home" id="nav-home">Home</a>
+    <a href="#form" id="nav-form">Form</a>
+  </nav>
+  <section id="home">
+    <p id="welcome">Welcome to the fixture app.</p>
+    <button id="show-toast" type="button">Show toast</button>
+    <button id="open-dialog" type="button">Open confirm</button>
+    <div id="toast" class="hidden" role="status">Saved!</div>
+  </section>
+  <section id="form" class="hidden">
+    <h2>Signup</h2>
+    <form id="signup" aria-label="Signup form">
+      <label>Name <input id="name" name="name" /></label>
+      <label>Email <input id="email" name="email" type="email" /></label>
+      <label>Role
+        <select id="role" name="role" aria-label="Role">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </label>
+      <label><input id="terms" type="checkbox" /> Accept terms</label>
+      <button id="submit" type="submit">Submit</button>
+    </form>
+    <p id="result" aria-live="polite"></p>
+  </section>
+  <script>
+    const toast = document.getElementById('toast');
+    document.getElementById('show-toast').onclick = () => {
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 1500);
+    };
+    document.getElementById('open-dialog').onclick = () => {
+      const ok = confirm('Proceed?');
+      document.getElementById('welcome').textContent = ok ? 'Confirmed' : 'Cancelled';
+    };
+    document.getElementById('nav-form').onclick = (e) => {
+      e.preventDefault();
+      document.getElementById('home').classList.add('hidden');
+      document.getElementById('form').classList.remove('hidden');
+    };
+    document.getElementById('nav-home').onclick = (e) => {
+      e.preventDefault();
+      document.getElementById('form').classList.add('hidden');
+      document.getElementById('home').classList.remove('hidden');
+    };
+    document.getElementById('signup').onsubmit = (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const role = document.getElementById('role').value;
+      const terms = document.getElementById('terms').checked;
+      document.getElementById('result').textContent =
+        terms ? `OK:${name}:${email}:${role}` : 'Terms required';
+    };
+  </script>
+</body>
+</html>

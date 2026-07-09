@@ -1,0 +1,183 @@
+{
+  "steps": [
+    {
+      "tool": "browser_info",
+      "arguments": {}
+    },
+    {
+      "tool": "browser_launch",
+      "arguments": {
+        "headless": true,
+        "browser": "chromium",
+        "base_url": "http://127.0.0.1:8877"
+      }
+    },
+    {
+      "tool": "goto",
+      "arguments": {
+        "url": "/"
+      }
+    },
+    {
+      "tool": "expect_text",
+      "arguments": {
+        "text": "Nebula Market"
+      }
+    },
+    {
+      "tool": "expect_title",
+      "arguments": {
+        "text": "Nebula Market"
+      }
+    },
+    {
+      "tool": "snapshot",
+      "arguments": {}
+    },
+    {
+      "tool": "click",
+      "arguments": {
+        "role": "link",
+        "name": "Shop",
+        "exact": true
+      }
+    },
+    {
+      "tool": "expect_url",
+      "arguments": {
+        "url": "**/shop.html"
+      }
+    },
+    {
+      "tool": "fill",
+      "arguments": {
+        "selector": "#search",
+        "value": "mug"
+      }
+    },
+    {
+      "tool": "expect_text",
+      "arguments": {
+        "text": "Orbit Ceramic Mug"
+      }
+    },
+    {
+      "tool": "click",
+      "arguments": {
+        "role": "button",
+        "name": "Add Orbit Ceramic Mug to cart"
+      }
+    },
+    {
+      "tool": "click",
+      "arguments": {
+        "selector": "#nav-cart"
+      }
+    },
+    {
+      "tool": "expect_text",
+      "arguments": {
+        "text": "Orbit Ceramic Mug"
+      }
+    },
+    {
+      "tool": "screenshot",
+      "arguments": {
+        "path": "screenshots/nebula-cart.png",
+        "full_page": true
+      }
+    },
+    {
+      "tool": "goto",
+      "arguments": {
+        "url": "/login.html"
+      }
+    },
+    {
+      "tool": "fill",
+      "arguments": {
+        "selector": "#email",
+        "value": "demo@nebula.test"
+      }
+    },
+    {
+      "tool": "fill",
+      "arguments": {
+        "selector": "#password",
+        "value": "nebula1"
+      }
+    },
+    {
+      "tool": "click",
+      "arguments": {
+        "selector": "#login-submit"
+      }
+    },
+    {
+      "tool": "expect_text",
+      "arguments": {
+        "text": "You are signed in"
+      }
+    },
+    {
+      "tool": "goto",
+      "arguments": {
+        "url": "/contact.html"
+      }
+    },
+    {
+      "tool": "fill",
+      "arguments": {
+        "selector": "#name",
+        "value": "Test User"
+      }
+    },
+    {
+      "tool": "fill",
+      "arguments": {
+        "selector": "#email",
+        "value": "test@nebula.test"
+      }
+    },
+    {
+      "tool": "fill",
+      "arguments": {
+        "selector": "#message",
+        "value": "Hello from the browser MCP E2E suite!"
+      }
+    },
+    {
+      "tool": "click",
+      "arguments": {
+        "selector": "#contact-submit"
+      }
+    },
+    {
+      "tool": "expect_text",
+      "arguments": {
+        "text": "we received your message"
+      }
+    },
+    {
+      "tool": "a11y_scan",
+      "arguments": {
+        "impact": "serious"
+      }
+    },
+    {
+      "tool": "run_suite",
+      "arguments": {
+        "path": "browser-tests/nebula-checkout.yaml",
+        "headless": true
+      }
+    },
+    {
+      "tool": "list_artifacts",
+      "arguments": {}
+    },
+    {
+      "tool": "browser_close",
+      "arguments": {}
+    }
+  ]
+}

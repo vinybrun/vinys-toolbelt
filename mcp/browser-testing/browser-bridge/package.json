@@ -1,0 +1,11 @@
+{
+  "name": "rmcp-browser-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright JSON-RPC bridge for the rmcp browser testing MCP server",
+  "dependencies": {
+    "playwright": "^1.51.0",
+    "axe-core": "^4.10.0"
+  }
+}
