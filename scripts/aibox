@@ -1,50 +1,157 @@
 #!/usr/bin/env bash
 # aibox — disposable rootless-podman sandboxes that clone a repo and run a coding
-# agent CLI inside it.
+# agent CLI inside it, one container per agent, on a shared bridge network so
+# sandboxes can reach each other by name.
 #
+# made by vinybrun
+#
+# ── Usage ────────────────────────────────────────────────────────────────────
 #   aibox example https://github.com/your/repo
-#     New env + container. Shallow-clones the repo, installs the agent, launches it here.
+#     New env + container. Shallow-clones the repo, installs the agent, launches
+#     it in this terminal.
 #
 #   aibox 3 same example https://github.com/your/repo
-#     Same across N containers. Opens one terminal per container (titled "<folder>-<i> <model>")
-#     and launches the agent in each; the launching terminal becomes a control panel.
+#     Same agent command across N containers. Opens one terminal per container
+#     (titled "<folder>-<i> <model>"); the launching terminal becomes a control
+#     panel.
 #
-#   aibox 3 multi example https://github.com/your/repo      # "multi" is the default, may be omitted
-#     Same, but each container runs a different model (cycles through AIBOX_CMDS).
+#   aibox 3 multi example https://github.com/your/repo
+#     Same fan-out, but each container runs a different model (cycles through
+#     AIBOX_CMDS). "multi" is the default and may be omitted.
 #
-#   utils: build | up NAME | shell NAME | run NAME -- CMD | ls | stop NAME|all | reset NAME
-#          purge [-y]  — clean slate: removes every container and every env folder, and
-#                        reclaims disk, but KEEPS the base image so new envs start fast
-#                        (no re-download/rebuild). Add --all/-a to also delete the image
-#                        (full wipe). Prompts for confirmation unless -y/--yes is given.
+#   aibox build                 build/rebuild the base image
+#   aibox up NAME               start an existing sandbox without attaching
+#   aibox shell NAME            bash into a sandbox
+#   aibox run NAME -- CMD       run CMD inside a sandbox
+#   aibox ls                    list aibox containers
+#   aibox stop NAME|all         stop one or all
+#   aibox reset NAME            remove container + wipe its work/ folder
+#   aibox caps                  show default MEM/CPUS
+#   aibox caps MEM CPUS         set defaults for *new* containers and apply live
+#                               to every existing one (no restart)
+#   aibox caps NAME MEM CPUS    apply MEM/CPUS to one existing container only
+#   aibox purge [-y]            clean slate: remove every container and env
+#                               folder, reclaim disk, KEEP the base image
+#   aibox purge --all [-y]      full wipe, including the base image
 #
-#   Which agent runs, and where sandbox data lives, come from the config file at
-#   ~/.config/aibox/config — nothing machine- or vendor-specific lives in this script.
+# Each sandbox publishes a block of host ports on 127.0.0.1, identity-mapped
+# (host 8010 -> container 8010), so a site or app it serves opens in the host
+# browser. Blocks start at 8000, one block per container. The owned range is
+# written to PORTS.md in the sandbox's work/ folder (what the agent inside reads).
 #
-#   made by vinybrun
+# Symlink onto PATH:
+#   ln -s /path/to/vinys-toolbelt/scripts/aibox ~/.local/bin/aibox
+#
+# ── Host dependencies ────────────────────────────────────────────────────────
+#   required:
+#     podman   rootless container runtime (the only hard dependency)
+#     bash     this script (bash 4+)
+#     curl     used by typical AIBOX_INSTALL_CMD installers
+#     git      shallow-clones REPO into /work
+#   optional:
+#     kitty    multi-env fan-out opens one window per container; without it,
+#              containers still start — use the printed `aibox __attach …` lines
+#     ss       from iproute2; skips host ports already in use when allocating
+#     /dev/kvm hardware accel for x86_64 emulators (Android AVD, QEMU) inside
+#              containers. Enable with:  sudo ./scripts/enable-kvm
+#
+# ── Config (all AIBOX_* knobs) ───────────────────────────────────────────────
+# Nothing machine- or vendor-specific lives in this script. Settings come from
+# ~/.config/aibox/config (never committed). Environment variables override the
+# file, so `AIBOX_ROOT=/tmp/x aibox ls` works for one-off runs.
+#
+#   AIBOX_CONFIG       path to config file
+#                      (default: ${XDG_CONFIG_HOME:-$HOME/.config}/aibox/config)
+#   AIBOX_ROOT         data root — podman store (.podman) + every env folder hang
+#                      off this. MUST be set once the script is checked in / symlinked,
+#                      or ROOT falls back to the script dir and strands the store.
+#   AIBOX_AGENT_HOME   agent dotdir bind-mounted into the container $HOME
+#                      (default: .agent)
+#   AIBOX_INSTALL_CMD  shell command that installs the agent (empty = image already
+#                      has it)
+#   AIBOX_UPDATE_CMD   optional post-install update step
+#   AIBOX_CMDS         bash array of launch commands. 'same' uses [0] for every
+#                      env; 'multi' cycles through them. Single-env uses [0].
+#                      (default: bash)
+#   AIBOX_MEM          memory cap for new containers (default: 16g)
+#   AIBOX_CPUS         CPU cap for new containers (default: 8)
+#   AIBOX_PORT_BASE    first port of the first published block (default: 8000)
+#   AIBOX_PORT_COUNT   ports per sandbox (default: 10)
+#   AIBOX_PORT_BLOCKS  how many blocks to search before giving up (default: 16)
+#   AIBOX_PORT_HOST_IP bind address for published ports (default: 127.0.0.1;
+#                      set 0.0.0.0 to expose on the LAN)
+#
+# Generic example (~/.config/aibox/config):
+#
+#   AIBOX_ROOT=/path/to/sandbox/data
+#   AIBOX_AGENT_HOME=.your-agent
+#   AIBOX_INSTALL_CMD='curl -fsSL https://example.com/install.sh | bash'
+#   AIBOX_UPDATE_CMD='your-agent update'
+#   AIBOX_CMDS=("your-agent -m model-a" "your-agent -m model-b")
+#   AIBOX_MEM=16g
+#   AIBOX_CPUS=8
+#
+# ── Enabling grok on the alpha channel ───────────────────────────────────────  # publish-guard: allow vendor-x
+# First provision installs the CLI, then switches it to alpha (faster updates;
+# may have bugs). Auth happens inside the sandbox on first launch.
+#
+#   mkdir -p ~/.config/aibox
+#   cat > ~/.config/aibox/config <<'EOF'
+#   AIBOX_ROOT=/path/to/sandbox/data
+#   AIBOX_AGENT_HOME=.grok                                          # publish-guard: allow vendor-x
+#   AIBOX_INSTALL_CMD='curl -fsSL https://x.ai/cli/install.sh | bash'  # publish-guard: allow vendor-x
+#   AIBOX_UPDATE_CMD='grok update --alpha'                           # publish-guard: allow vendor-x
+#   AIBOX_CMDS=(
+#     "grok --yolo -m grok-build"                                   # publish-guard: allow vendor-x
+#   )
+#   AIBOX_MEM=16g
+#   AIBOX_CPUS=8
+#   EOF
+#
+#   aibox myenv https://github.com/your/repo
+#
+# After that, AIBOX_UPDATE_CMD re-runs on every fresh provision. To pin stable
+# instead of alpha, set AIBOX_UPDATE_CMD to:
+#   AIBOX_UPDATE_CMD='grok update --stable'                            # publish-guard: allow vendor-x
+# Or one-shot inside an existing sandbox:
+#   aibox run myenv -- grok update --stable                          # publish-guard: allow vendor-x
+#   aibox run myenv -- grok update --alpha                           # publish-guard: allow vendor-x
 
 set -euo pipefail
 
 # ── Config ──────────────────────────────────────────────────────────────────
-# Machine-specific settings live outside the repo. Environment variables win over
-# the file, so `AIBOX_ROOT=/tmp/x aibox ls` works for one-off runs.
+# All AIBOX_* knobs are resolved here. Documented in the header above.
+# Machine-specific settings live outside the repo; env vars win over the file.
 CONFIG="${AIBOX_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/aibox/config}"
 # shellcheck source=/dev/null
 [ -r "$CONFIG" ] && . "$CONFIG"
 
-# Data root: the podman store and every env folder hang off this. It defaults to the
+# Data root: the podman store and every env folder hang off this. Defaults to the
 # script's own directory, but MUST be set explicitly once the script lives somewhere
 # other than its data (e.g. checked into a repo and symlinked back). Resolving through
 # symlinks here would otherwise point ROOT at the repo and silently strand the store.
 ROOT="${AIBOX_ROOT:-$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)}"
 
 # Agent CLI to install and run inside each sandbox.
-#   AGENT_HOME     dotdir the agent keeps its install/auth in, bind-mounted from the host
-#   INSTALL_CMD    installs the agent (empty = the image already provides it)
-#   UPDATE_CMD     optional post-install update step
 AGENT_HOME="${AIBOX_AGENT_HOME:-.agent}"
 INSTALL_CMD="${AIBOX_INSTALL_CMD:-}"
 UPDATE_CMD="${AIBOX_UPDATE_CMD:-}"
+
+# Launch commands. 'same' uses the first entry for every env; 'multi' (default)
+# cycles through them. Single-env launches use the first.
+CMDS=("${AIBOX_CMDS[@]:-bash}")
+
+# Per-sandbox resource caps.
+MEM="${AIBOX_MEM:-16g}"
+CPUS="${AIBOX_CPUS:-8}"
+PIDS="4096"
+
+# Published port blocks — identity-mapped (host N -> container N), one block per
+# sandbox. See header for meaning of each knob.
+PORT_BASE="${AIBOX_PORT_BASE:-8000}"
+PORT_COUNT="${AIBOX_PORT_COUNT:-10}"
+PORT_BLOCKS="${AIBOX_PORT_BLOCKS:-16}"
+PORT_HOST_IP="${AIBOX_PORT_HOST_IP:-127.0.0.1}"
 
 IMAGE="aibox:latest"
 # Shared bridge network so every sandbox can see the others. On a *named* podman
@@ -70,20 +177,150 @@ podman() { command podman "${PODMAN_OPTS[@]}" "$@"; }
 stop_container() { podman stop -t 3 -i "$1" >/dev/null 2>&1 || true; }
 
 # Strip a trailing slash from a NAME/FOLDER arg — tab-completing a directory
-# appends one (e.g. `aibox Jun30-1/`), but env/container names never have it.
+# appends one (e.g. `aibox jun30-1/`), but env/container names never have it.
 strip_slash() { printf '%s' "${1%/}"; }
 
-# ── Launch commands ─────────────────────────────────────────────────────────
-# Set AIBOX_CMDS in the config file. Runs inside each env, in the cloned repo's
-# dir. 'same' uses the first entry for every env; 'multi' (default) cycles through
-# them in order, rolling over when there are more envs than entries. Single-env
-# launches use the first.
-CMDS=("${AIBOX_CMDS[@]:-bash}")
+# Parse "16g"/"512m" → number + unit. Used by caps validation and swap calc.
+_mem_parts() { # sets _mem_n _mem_u; returns 1 if malformed
+  [[ "$1" =~ ^([0-9]+)([bBkKmMgG]?)$ ]] || return 1
+  _mem_n="${BASH_REMATCH[1]}"; _mem_u="${BASH_REMATCH[2]}"
+}
+# Swap ceiling = 2× memory (podman wants memory-swap ≥ memory).
+mem_swap() { _mem_parts "$1" || { echo "$1"; return; }; echo "$((_mem_n * 2))${_mem_u}"; }
 
-# per-sandbox resource caps
-MEM="4g"
-CPUS="2"
-PIDS="4096"
+# Validate MEM CPUS args for `caps`.
+require_mem_cpus() {
+  local mem="${1:-}" cpus="${2:-}"
+  [ -n "$mem" ] && [ -n "$cpus" ] || {
+    echo "usage: aibox caps [MEM CPUS] | aibox caps NAME MEM CPUS" >&2; exit 1
+  }
+  _mem_parts "$mem" || { echo "aibox: bad MEM '$mem' (e.g. 16g, 512m)" >&2; exit 1; }
+  [[ "$cpus" =~ ^[0-9]+([.][0-9]+)?$ ]] || { echo "aibox: bad CPUS '$cpus' (e.g. 8)" >&2; exit 1; }
+}
+
+# Persist default caps into the config file (sourced on next launch).
+# Replaces existing AIBOX_MEM/AIBOX_CPUS lines or appends them.
+set_default_caps() {
+  local mem="$1" cpus="$2" conf="$CONFIG"
+  mkdir -p "$(dirname "$conf")"
+  touch "$conf"
+  if grep -q '^AIBOX_MEM=' "$conf" 2>/dev/null; then
+    sed -i "s|^AIBOX_MEM=.*|AIBOX_MEM=$mem|" "$conf"
+  else
+    printf '\n# resource caps for new containers (aibox caps)\nAIBOX_MEM=%s\n' "$mem" >> "$conf"
+  fi
+  if grep -q '^AIBOX_CPUS=' "$conf" 2>/dev/null; then
+    sed -i "s|^AIBOX_CPUS=.*|AIBOX_CPUS=$cpus|" "$conf"
+  else
+    printf 'AIBOX_CPUS=%s\n' "$cpus" >> "$conf"
+  fi
+  MEM="$mem"; CPUS="$cpus"
+  echo "defaults for new containers: mem=$MEM cpus=$CPUS  (wrote $conf)"
+}
+
+# Live-apply caps to one container. Running: cgroup update only. Stopped: brief
+# start so podman persists the new HostConfig, then stop again.
+apply_limit() {
+  local cname="$1" mem="$2" cpus="$3" status was_running=1
+  status="$(podman inspect --format '{{.State.Status}}' "$cname" 2>/dev/null)" \
+    || { echo "aibox: no container $cname" >&2; return 1; }
+  if [ "$status" != "running" ]; then
+    was_running=0
+    podman start "$cname" >/dev/null
+  fi
+  podman update --memory "$mem" --memory-swap "$(mem_swap "$mem")" --cpus "$cpus" "$cname" >/dev/null
+  if [ "$was_running" = 0 ]; then
+    podman stop -t 3 "$cname" >/dev/null
+    echo "  ${cname#aibox-}: mem=$mem cpus=$cpus  (was $status — started briefly to persist)"
+  else
+    echo "  ${cname#aibox-}: mem=$mem cpus=$cpus  (live)"
+  fi
+}
+
+# ── Published ports ─────────────────────────────────────────────────────────
+# PORT_* knobs are set at the top (config section). Every sandbox gets a contiguous
+# block of PORT_COUNT host ports, published with an *identity* mapping
+# (host 8010-8019 -> container 8010-8019). Same number on both sides means the URL
+# the agent prints inside the container is the URL that works on the host.
+#
+# One block per container, so a fan-out of N sandboxes never collides. The block a
+# container owns is recorded as a podman label: it's assigned once at create time,
+# survives stop/start, and is what `aibox ls` reports.
+
+# Port-block bases already owned by an aibox container, running or not — a stopped
+# sandbox keeps its reservation so restarting it can't collide with a newer one.
+# The label has to be read with `inspect`, not `ps`: in `podman ps` templates .Labels
+# is a *slice* ("k=v,k=v"), so `index .Labels "k"` dies with "cannot index
+# slice/array with type string". Only inspect's .Config.Labels is a real map. That
+# error on stderr used to be swallowed here, silently freeing every reservation.
+taken_bases() {
+  local names
+  mapfile -t names < <(podman ps -a --filter "name=aibox-" --filter "label=aibox.portbase" \
+                         --format '{{.Names}}' 2>/dev/null)
+  [ "${#names[@]}" -gt 0 ] || return 0
+  podman inspect --format '{{index .Config.Labels "aibox.portbase"}}' "${names[@]}" \
+    | grep -E '^[0-9]+$' || true
+}
+
+# Ports the host itself is already listening on. Best-effort: without `ss` we skip
+# the check and let podman's own bind error surface if something really is in use.
+host_listening() {
+  command -v ss >/dev/null 2>&1 || return 0
+  ss -Hltn 2>/dev/null | awk '{n=split($4,a,":"); print a[n]}' | grep -E '^[0-9]+$' || true
+}
+
+# alloc_portbase — echo the base of the first block that no aibox container owns and
+# that the host isn't already listening on. Returns non-zero when every block is
+# spoken for; the caller then starts the container with no published ports rather
+# than failing the launch outright.
+alloc_portbase() {
+  local taken listening base end i p ok
+  taken=" $(taken_bases | tr '\n' ' ')"
+  listening=" $(host_listening | tr '\n' ' ')"
+  for ((i=0; i<PORT_BLOCKS; i++)); do
+    base=$((PORT_BASE + i * PORT_COUNT)); end=$((base + PORT_COUNT - 1))
+    if [[ "$taken" == *" $base "* ]]; then continue; fi
+    ok=1
+    for ((p=base; p<=end; p++)); do
+      if [[ "$listening" == *" $p "* ]]; then ok=0; break; fi
+    done
+    if [ "$ok" = 1 ]; then printf '%s' "$base"; return 0; fi
+  done
+  return 1
+}
+
+# container_portbase CNAME — the block base recorded on an existing container, if any.
+container_portbase() {
+  local b
+  b="$(podman inspect --format '{{index .Config.Labels "aibox.portbase"}}' "$1" 2>/dev/null)" || return 1
+  [[ "$b" =~ ^[0-9]+$ ]] || return 1
+  printf '%s' "$b"
+}
+
+# write_ports_note WORKDIR BASE — drop the crib sheet the agent inside reads. Written
+# on every launch (not just create) so a deleted or stale note repairs itself, and so
+# a container that predates published ports doesn't keep advertising ones it lacks.
+write_ports_note() {
+  local work="$1" base="${2:-}" end
+  [ -n "$base" ] || { rm -f "$work/PORTS.md"; return 0; }
+  end=$((base + PORT_COUNT - 1))
+  cat >"$work/PORTS.md" <<EOF
+# Shared ports
+
+Ports **$base-$end** are forwarded from this sandbox to the host, same number on
+both sides. Something listening on $base in here is http://localhost:$base out there.
+
+- **Bind to 0.0.0.0, never 127.0.0.1.** A server on this container's loopback is
+  not reachable from the host — this is the one thing that trips people up.
+- Only $base-$end cross the boundary. Any other port is invisible from outside.
+- Serve the main app on $base; keep $((base + 1))-$end for extra services.
+- Tell the user the http://localhost:PORT URL — theirs is the same number as yours.
+
+    python3 -m http.server $base --bind 0.0.0.0
+    npm run dev -- --host 0.0.0.0 --port $base
+    uvicorn app:app --host 0.0.0.0 --port $base
+EOF
+}
 
 # Image is defined inline (no separate Containerfile needed). Empty context = fast build.
 build() {
@@ -153,6 +390,8 @@ ensure_up() {
     # base image, so tearing the container down and recreating it below is
     # lossless — fall through to the create path instead of swallowing the error.
     if podman start "$cname" >/dev/null 2>&1; then
+      mkdir -p "$work"
+      write_ports_note "$work" "$(container_portbase "$cname" || true)"
       return
     fi
     echo ">> ${cname#aibox-}: stale runtime state (reboot?) — recreating container ..." >&2
@@ -181,6 +420,16 @@ ensure_up() {
   # (`cond && arr=(…)` returns 1 when absent, which would trip set -e.)
   local kvm_dev=()
   if [ -e /dev/kvm ]; then kvm_dev=(--device /dev/kvm); fi
+  # Claim a block of host ports so whatever the agent serves is reachable from the
+  # host browser. Published as one range mapping, and stamped on the container as a
+  # label so the block can be recovered later without re-deriving it.
+  local ports=() portbase=""
+  if portbase="$(alloc_portbase)"; then
+    ports=(-p "$PORT_HOST_IP:$portbase-$((portbase + PORT_COUNT - 1)):$portbase-$((portbase + PORT_COUNT - 1))"
+           --label "aibox.portbase=$portbase")
+  else
+    echo ">> ${cname#aibox-}: all $PORT_BLOCKS port blocks are taken — no ports published" >&2
+  fi
   ensure_network
   # Hostname derived from the env's folder name (single: NAME; fan-out: FOLDER-i).
   # Set as BOTH the container hostname and a network-alias: aardvark-dns resolves
@@ -195,12 +444,13 @@ ensure_up() {
     --memory "$MEM" --cpus "$CPUS" --pids-limit "$PIDS" \
     --security-opt no-new-privileges \
     --cap-drop SYS_ADMIN --cap-drop NET_ADMIN --cap-drop NET_RAW \
-    "${kvm_dev[@]}" \
+    "${kvm_dev[@]}" "${ports[@]}" \
     -v "$work:/work:Z" \
     "${agent_mount[@]}" \
     -v "$agents/claude:/root/.claude:Z" \
     -v "$agents/claude.json:/root/.claude.json:Z" \
     "$IMAGE" sleep infinity >/dev/null
+  write_ports_note "$work" "$portbase"
 }
 
 # provision CNAME [REPO] — install the agent, optionally clone REPO into /work
@@ -243,6 +493,12 @@ attach_exec() {
   ' || true
 }
 
+# port_range CNAME — "8010-8019" for an existing container, empty if it has no block.
+port_range() {
+  local b; b="$(container_portbase "$1" 2>/dev/null)" || return 0
+  printf '%s-%s' "$b" "$((b + PORT_COUNT - 1))"
+}
+
 # model_of CMD — echo the value after -m/--model in CMD, else the command's name.
 model_of() {
   local prev="" tok
@@ -274,7 +530,9 @@ open_env() {
   ensure_up "$cname" "$work"
   [ "$fresh" = 1 ] && provision "$cname" "$repo"
   local sub=""; [ -n "$repo" ] && sub="$(basename "$repo" .git)"
+  local pr; pr="$(port_range "$cname")"
   echo ">> '$name' [model: $(model_of "${CMDS[0]}")]  —  re-launch: aibox $name${repo:+ $repo}"
+  [ -n "$pr" ] && echo ">> ports $pr shared with the host — http://localhost:${pr%%-*}"
   echo ">> opening in this terminal: ${CMDS[0]}"
   attach_exec "$cname" "$sub" "${CMDS[0]}"
 }
@@ -306,19 +564,22 @@ multi() {
   # N<=1: open in THIS terminal (and print how to re-launch it).
   if [ "$n" -le 1 ]; then
     gcmd="$(cmd_for 1)"
+    local pr; pr="$(port_range "aibox-$folder-1")"
     echo ">> '$folder-1' [model: $(model_of "$gcmd")]  —  re-launch: aibox 1 $mode $folder${repo:+ $repo}"
+    [ -n "$pr" ] && echo ">> ports $pr shared with the host — http://localhost:${pr%%-*}"
     echo ">> opening in this terminal: $gcmd"
     attach_exec "aibox-$folder-1" "$sub" "$gcmd"
     return
   fi
 
   # N>=2: spawn one kitty window per env; this terminal becomes the control panel.
-  local failed=0
+  local failed=0 pr
   echo; echo "spawning $n windows — access each container with:"
   for ((i=1; i<=n; i++)); do
     gcmd="$(cmd_for "$i")"; model="$(model_of "$gcmd")"; id="$folder-$i"
+    pr="$(port_range "aibox-$folder-$i")"
     if spawn_window "aibox-$folder-$i" "$sub" "$gcmd" "$id $model"; then
-      printf '   %-24s [%s]\n        access: aibox shell %s\n' "$id" "$model" "$id"
+      printf '   %-24s [%s]\n        access: aibox shell %s%s\n' "$id" "$model" "$id" "${pr:+   ports: $pr}"
     else
       failed=1
       printf '   %-24s [%s]  !! window did NOT open\n        run here: aibox __attach aibox-%s %q %q\n' \
@@ -347,8 +608,36 @@ case "$cmd" in
     exec command podman "${PODMAN_OPTS[@]}" exec -it "aibox-$n" "$@"
     ;;
   __attach) attach_exec "${1:?}" "${2:-}" "${3:-${CMDS[0]}}" ;;
-  ls|list) podman ps --filter "name=aibox-" --format "table {{.Names}}\t{{.Status}}\t{{.Image}}" ;;
-  -h|--help|help) sed -n '2,24p' "$(readlink -f "${BASH_SOURCE[0]}")" | sed 's/^# \{0,1\}//' ;;
+  ls|list) podman ps --filter "name=aibox-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" ;;
+  caps)
+    # No args  → show defaults.
+    # MEM CPUS → new-container defaults + every existing container.
+    # NAME MEM CPUS → one existing container only.
+    if [ $# -eq 0 ]; then
+      echo "defaults for new containers: mem=$MEM cpus=$CPUS"
+      echo "  aibox caps MEM CPUS         # new + all existing"
+      echo "  aibox caps NAME MEM CPUS    # one existing only"
+    elif [ $# -eq 2 ]; then
+      require_mem_cpus "$1" "$2"
+      set_default_caps "$1" "$2"
+      mapfile -t names < <(podman ps -a --filter "name=aibox-" --format '{{.Names}}')
+      if [ "${#names[@]}" -eq 0 ]; then
+        echo "no existing containers"
+      else
+        echo "applying mem=$1 cpus=$2 to ${#names[@]} existing container(s) ..."
+        for c in "${names[@]}"; do apply_limit "$c" "$1" "$2"; done
+      fi
+    elif [ $# -eq 3 ]; then
+      require_mem_cpus "$2" "$3"
+      apply_limit "aibox-$(strip_slash "$1")" "$2" "$3"
+    else
+      echo "usage: aibox caps [MEM CPUS] | aibox caps NAME MEM CPUS" >&2; exit 1
+    fi
+    ;;
+  -h|--help|help)
+    # Header comments after the shebang, minus publish-guard allow trailers.
+    awk 'NR==1{next} /^#/{sub(/^# ?/,""); sub(/[ \t]+# publish-guard: allow .*$/,""); print; next} {exit}'       "$(readlink -f "${BASH_SOURCE[0]}")"
+    ;;
   stop)
     if [ "${1:-}" = "all" ]; then
       mapfile -t names < <(podman ps -a --filter "name=aibox-" --format '{{.Names}}')

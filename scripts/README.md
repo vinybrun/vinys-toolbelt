@@ -5,28 +5,15 @@ Standalone CLI scripts that stand on their own outside Claude Code.
 ## aibox
 
 Disposable rootless-podman sandboxes that clone a repo and run a coding agent CLI
-inside it, one container per agent, on a shared bridge network so sandboxes can
-reach each other by name. `aibox --help` for usage.
+inside it. Full docs — usage, host dependencies, every `AIBOX_*` config knob, and
+agent setup (including alpha channel) — live in the script header:
 
-Nothing machine- or vendor-specific lives in the script. Which agent gets installed,
-which models it runs, and — importantly — **where sandbox data lives** all come from
-`~/.config/aibox/config`, which is never committed:
-
-```bash
-AIBOX_ROOT=/path/to/sandbox/data      # podman store + every env folder hang off this
-AIBOX_AGENT_HOME=.your-agent          # dotdir bind-mounted into each container's $HOME
-AIBOX_INSTALL_CMD='curl -fsSL https://example.com/install.sh | bash'
-AIBOX_UPDATE_CMD='your-agent update'
-AIBOX_CMDS=("your-agent -m model-a" "your-agent -m model-b")
+```
+aibox --help
 ```
 
-`AIBOX_ROOT` matters: the store is tens of gigabytes and must not follow the script.
-Without it, `ROOT` falls back to the resolved script directory, so a checked-in and
-symlinked `aibox` would create a brand-new empty store next to this README and lose
-sight of every existing container. Set it once, in the config.
-
-Environment variables override the config file, so `AIBOX_ROOT=/tmp/x aibox ls` works
-for a one-off.
+Config still comes from `~/.config/aibox/config` (never committed). Set `AIBOX_ROOT`
+there so the multi-GB podman store does not follow a checked-in / symlinked script.
 
 ## enable-kvm
 
