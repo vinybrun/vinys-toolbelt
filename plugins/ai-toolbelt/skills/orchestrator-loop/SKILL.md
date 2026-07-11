@@ -32,9 +32,13 @@ Each cycle:
 4. Process change → edit the workflow skill only (still no status in the skill).
    Status change → edit the status files only.
 5. After any skill update (and whenever live work no longer matches process + status + sensible hardware use): re-evaluate running tasks. Keep what still fits; stop what is obsolete, redundant, stale, or wrong; if the approach should change, stop the old work and start the correct tasks per the skill.
-6. Coordinate concurrency to use the machine hard — but only on work that still makes sense per the skill and status. Start additional useful tasks when capacity is free; avoid thrashing, duplicate jobs, and processes that no longer serve the workflow. Prefer the right device for the job (GPU for GPU-bound work, CPU for CPU-bound, don’t pin useless load on a contended resource).
+6. Coordinate concurrency and **actively tune parallelism of live work** to the machine and the workflow:
+   - **Scale up** when there is sustained spare CPU (and enough RAM / GPU / disk bandwidth for the job type), the skill allows a higher cap, and more parallel units would shorten the critical path without wrecking quality. Examples: raise e2e/matrix `CONCURRENCY`, fan out more review workers, start additional independent tasks that status says are ready.
+   - **Scale down** when the box is saturated, quality is suffering (timeouts, dropped frames, black screens, OOM, CDP flakiness), or contention is thrashing the critical path. Lower `CONCURRENCY`, reduce worker fan-out, or serialize heavy jobs.
+   - Prefer **adjusting the running suite** (graceful restart with new env/flags, or resizing the worker pool) over stacking a second full duplicate suite. Stay within skill defaults/limits unless status shows a clear reason to deviate; note old → new settings and why in the status files.
+   - Still only schedule work that still makes sense per skill + status. Avoid duplicate jobs and processes that no longer serve the workflow. Prefer the right device for the job (GPU for GPU-bound work, CPU for CPU-bound; don’t pin useless load on a contended resource).
 7. From status + skill, if required work is unfinished or not running, start those tasks (when resources allow) and update the status files.
-8. Short report: skill edits (if any), status-file edits, tasks kept/stopped/started, hardware snapshot + scheduling rationale, unfinished gaps closed, next focus.
+8. Short report: skill edits (if any), status-file edits, tasks kept/stopped/started, **concurrency adjustments (old → new + why)**, hardware snapshot + scheduling rationale, unfinished gaps closed, next focus.
 ```
 
 ## Defaults
@@ -62,5 +66,6 @@ If the project has no status dir yet, create `status/session.md` under the proje
 
 - Do **not** put live progress into the workflow skill — status files only.
 - The orchestrator must **not** implement work itself; it only inspects, spawns workers, updates status, and reports.
+- **Concurrency tuning** is in scope: the orchestrator may raise or lower parallelism of current tasks (via workers / restarts with new caps) when hardware headroom or pressure warrants it; record the change in status files.
 - To change cadence only: re-run `/loop` with a different interval (and cancel the old job if still active).
 - Pair with heavy process skills (e.g. `ui-viewport-qa`) that stay stateless while this loop owns coordination.
