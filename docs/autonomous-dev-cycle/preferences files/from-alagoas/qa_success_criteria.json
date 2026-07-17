@@ -7,8 +7,8 @@
     "matrix_critique": "e2e/screenshots/viewports/matrix_critique.md",
     "video_critique": "e2e/screenshots/web/e2e/video_critique.md",
     "phone_inventory": "e2e/screenshots/web/phone/touch_inventory.md",
-    "process_skill": "skills/ui-viewport-qa/SKILL.md",
-    "input_skill": "skills/app-input-e2e/SKILL.md"
+    "process_skill": ".agent/skills/ui-viewport-qa/SKILL.md",
+    "input_skill": ".agent/skills/app-input-e2e/SKILL.md"
   },
   "gate_rules": {
     "pre_prod_pass_requires": [
@@ -419,7 +419,7 @@
       "artifact_kind": "matrix_png | e2e_video | phone_video | e2e_still",
       "reviewed_at": "ISO-8601",
       "reviewer": "agent",
-      "run_start_unix": "number from status/run_start_unix for this pass",
+      "run_start_unix": "number from .agent/status/run_start_unix for this pass",
       "opened": "must be true — agent used image tool or sampled video/stills",
       "verdict": "all_good | issues",
       "summary": "all good OR short description of what is wrong",
@@ -1211,7 +1211,7 @@
     "evidence": [
       "Matrix *_04_playing.png for layout size/chrome",
       "Mid-play e2e stills or video frames for density + speed feel",
-      "Optional: status/fairness_usability_report.md metrics if present"
+      "Optional: .agent/status/fairness_usability_report.md metrics if present"
     ],
     "when_to_apply": "F-* when: applies only per fairness_usability.criteria when/when desktop|handheld. Desktop playing cells: emphasize F-NO-DESKTOP-REGRESS + F-SPEED-FEEL. Handheld: all F-* except F-NO-DESKTOP-REGRESS is desktop-only."
   },
