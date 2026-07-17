@@ -120,12 +120,18 @@ process only** — live matrix counts live in `scripts/qa_matrix.json`;
 
 - **e2e / emulator / phone script `PASS` or `CAPTURE_OK` / exit 0** = automation
   wrote artifacts or steps ran — **not** “looks good.”
-- **Ship requires A4b + A6** (open videos/PNGs, write **per-file `*.review.json`**
-  sidecars **and** rollup critiques) then **A7** (no open BADs under criteria).
-  Never treat suite N/N as A7.
-- **Review of a file is complete only when** the agent has analyzed that
-  image/video **and** returned a sibling `*.review.json` (`verdict: all_good` or
-  `issues` with details). See **ui-viewport-qa → Per-artifact review files**.
+- **Ship requires A4b + A6** deep multi-role review (discover → map/checklist →
+  adversary; per-file `*.review.json` + rollups) then **A7**. Never treat suite
+  N/N as A7. See **ui-viewport-qa → Capture is the bottleneck** and
+  **Multi-role visual review**.
+- **Capture is the suite bottleneck**; analysis is **deep and parallel** (many
+  workers). One review task may outlast one capture task; the **overall** review
+  work should not wait until all capture finishes and then run longer than the
+  capture phase as a serial tail. Prefer more review fan-out over shallower looks.
+- **Review of a file is complete only when** media was opened (multi-frame for
+  video), discovery + checklist (+ adversary on ship path) ran, and a sibling
+  `*.review.json` exists. OPEN-* issues without a criterion id still block until
+  mapped or user-accepted.
 
 **Short version of ship order:**
 

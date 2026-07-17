@@ -44,8 +44,9 @@ Each cycle:
    - Only schedule work that still makes sense per skill + status. Avoid duplicate jobs and processes that no longer serve the workflow. Prefer the right device for the job (GPU for GPU-bound work, CPU for CPU-bound; don’t pin useless load on a contended resource).
 7. From status + skill, if required work is unfinished or not running, start those tasks (when resources allow) and update the status files.
    - **Trust the workflow gates:** when evidence on disk + skill criteria show a true next phase (e.g. A7 PASS → Phase B commit/push/deploy watch), **start it immediately**. Do **not** idle waiting for the user after an honest gate PASS. Still never skip or weaken a failed gate.
-   - **CAPTURE_OK ≠ A7:** suite exit 0 / N/N PASS is capture only. A7 needs per-artifact `*.review.json` sidecars (when the skill requires them) + rollup critiques with no open BADs. Do not spawn Phase B on capture green alone.
-   - **Missing matrix runners:** if status shows residual blocked on missing runners, spawn work to **build/finish runners** and run full `expected_cells` — do not park as optional residual.
+   - **CAPTURE_OK ≠ A7:** suite exit 0 / N/N is capture only. A7 needs deep multi-role review (R1→R3 when required), per-artifact `*.review.json` sidecars, and clean rollups. Do not spawn Phase B on capture green alone.
+   - **Analysis depth:** keep review fan-out high so suite wall-clock stays **capture-bound**. Do not thrift R1 discovery / multi-frame / adversary to save tokens when workers are idle.
+   - **Missing matrix runners:** if residual is blocked on missing runners, spawn work to **build/finish runners** and run full `expected_cells` — do not park as optional residual.
 8. Short report: skill edits (if any), status-file edits, tasks kept/stopped/started, **concurrency adjustments (old → new + why)**, hardware snapshot (**windowed CPU%** vs 50–80% target + window length, temp vs ~80°C if known) + scheduling rationale, unfinished gaps closed, next focus.
 ```
 
@@ -66,7 +67,7 @@ Convention (map to the current project if paths differ):
 
 | Role | Path |
 |------|------|
-| Workflow skill (process only) | `skills/ui-viewport-qa/SKILL.md` (plus `game-input-e2e` or `app-input-e2e`) |
+| Workflow skill (process only) | `skills/ui-viewport-qa/SKILL.md` (+ `game-input-e2e` or `app-input-e2e`) |
 | Criteria | project `qa_success_criteria.json` |
 | Live session status | `status/session.md` under project agent home |
 | Other status bits | `status/*` (progress lists, PIDs, unit trackers, worker reports) |

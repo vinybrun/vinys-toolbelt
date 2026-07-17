@@ -21,7 +21,8 @@ blockers before claiming "done".
 **Authority:** **`ui-viewport-qa`** → *Parallel vs serial* (criteria 1–9, task map).
 
 **PASS/FAIL authority:** **project `qa_success_criteria.json`** — open before any
-CRITIQUE/VIDEO line; cite criterion ids on BAD lines.
+CRITIQUE/VIDEO / `*.review.json`. Use **deep multi-role review** (R1 discover →
+R2 map/checklist → R3 adversary) per `ui-viewport-qa`. Cite criterion or OPEN-* ids.
 
 **Short form — parallel OK:** matrix units (`CONCURRENCY=<N>`); pipeline A4b ∥ A6
 per finished unit; critique batches; build wait overlapping read-only work.

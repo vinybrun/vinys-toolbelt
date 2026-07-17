@@ -39,7 +39,7 @@ each run; never assume prior run progress.
 ## Project stack map (fill in per repo)
 
 Process is stack-agnostic. Every project keeps a short map (here or in status)
-so agents do not invent paths. Example shapes:
+so agents do not invent paths.
 
 | Cycle concept | Typical locations (pick one per project) |
 |---------------|------------------------------------------|
@@ -58,16 +58,14 @@ foreign stack. Do not drop product-UI unit tests from A1 when that layer moves.
 
 ## Baseline vs full matrix (do not conflate) — and do not skip runners
 
-Imported from multi-project use (game + product app). Keep both layers honest.
-
 | Layer | What it is | Gate? |
 |-------|------------|--------|
-| **Baseline capture** | Project’s primary local suite (happy-path + critical surfaces) + post-deploy live smoke | **Always required** before/after ship |
-| **Criteria critiques** | Open success-criteria JSON; write GOOD/BAD + **`*.review.json`** on **this-run** artifacts | **Always required** (CAPTURE_OK ≠ review) |
+| **Baseline capture** | Project’s primary local suite + post-deploy live smoke | **Always required** before/after ship |
+| **Criteria critiques** | Open success-criteria JSON; deep R1→R3 + **`*.review.json`** on **this-run** artifacts | **Always required** (CAPTURE_OK ≠ review) |
 | **A1 units** | Layer-aware tests for changed code | **Yes** for changed layers |
 | **A2 build** | Fresh shippable web/app artifact | **Yes** when UI ships |
-| **Priority / debug subset** | Fast path (`MATRIX_FORMATS=priority`, one device, …) | **Not a substitute** for full matrix residual close |
-| **Full matrix** | Every `screens[]` × `formats[]` quality-hold PNG + VIDEO + A4b∥A6 + sidecars | **Required target** for residual close / full visual QA |
+| **Priority / debug subset** | Fast path only | **Not a substitute** for full matrix residual close |
+| **Full matrix** | Every `screens[]` × `formats[]` + VIDEO + deep A4b∥A6 + sidecars | **Required target** for residual close / full visual QA |
 
 ### Full matrix + runners (common failure mode)
 
@@ -75,16 +73,92 @@ Imported from multi-project use (game + product app). Keep both layers honest.
 2. **Missing or incomplete matrix runners are not a free pass.** Agents **must
    install, implement, or finish those runners**, then run the full matrix and
    review under criteria. Do **not** close residual by documenting “no runners.”
-3. **“Until runners land” means: make them land.** Not passive wait, optional
-   residual, or A7 without pixels.
+3. **“Until runners land” means: make them land.** Not passive wait or A7 without pixels.
 4. **Priority subset is debug/speed only** — never label it “full matrix done.”
-5. **Baseline still always required.** Full matrix never replaces baseline
-   suite + live + criteria reviews. Green baseline never excuses skipping
-   runners + full matrix when residual close / full visual QA is the goal.
+5. **Baseline still always required.** Full matrix never replaces baseline + live
+   + deep criteria reviews.
 6. **Do not** claim A7 on suite exit 0 alone. **Do not** invent CRITIQUE lines
    without artifacts.
 7. **Do not** remove product-UI tests from A1/A2 for the stack that owns the UI.
 
+
+## Capture is the bottleneck — analysis is deep, parallel, and bounded
+
+**Generating** screenshots, e2e videos, emulator `screenrecord`, and phone 2×2
+recordings dominates real cost (build, Chrome/AVD, encode, device). Once
+artifacts exist, **review must not be cheap**: spend agent turns, open many
+frames, run discovery + checklist + adversary. Do **not** skim to save tokens
+or force a fast green A7.
+
+### Parallel analysis (keep capture as the limiter)
+
+Review **must** run **in parallel with capture and with other reviews** (pipeline
+per matrix unit; multi-agent R1/R2/R3). Because analysis **fans out**:
+
+- A **single** review worker (or one unit’s full R1→R3 chain) **may take longer
+  wall-clock than a single capture unit** — that is normal and allowed.
+- Capture often runs with modest `CONCURRENCY` (sometimes effectively serial on
+  one AVD); analysis can still stack many readers. **Suite wall-clock should
+  still be dominated by capture + build**, not by a long serial review queue.
+- Orchestrators: **prefer more concurrent review workers** over one deep serial
+  reviewer when hardware allows, so thoroughness does not invent a new
+  end-to-end bottleneck.
+
+| Layer | Cost reality | Rule |
+|-------|--------------|------|
+| Capture (A4 / phone) | Highest wall-clock; hard to redo | Produce once per pass; pipeline review as units land |
+| Analysis (A4b / A6 / C2 / A7) | Agent-time, parallelizable | **Deep and thorough**; fan out so **suite** time stays capture-bound |
+| Fix + rebuild | High again | Only after honest BADs; recapture affected units |
+
+### Depth vs suite ceiling (grain of salt)
+
+**Depth first:** never drop geometry scans, multi-frame video, OPEN-*, or R3
+adversary just to “go faster.”
+
+**Suite ceiling (soft, wall-clock):** the **parallel analysis phase** for a pass
+should not **systematically** outlast the **capture phase** of that same pass
+as the thing that holds the ship. In other words:
+
+- Aim: *while* the capture pool is still running, analysis of finished units
+  keeps up; after the last capture exits, only a **short trailing review tail**
+  remains (finishing in-flight R2/R3, A7 rollup) — not a second full-duration
+  serial “now we finally look at everything.”
+- **OK:** one unit’s adversary pass longer than that unit’s capture journey.
+- **OK:** phone cell review longer than that cell’s screenrecord if other cells
+  capture/review overlap.
+- **Not OK:** waiting until *all* capture is done, then starting a long serial
+  analysis that alone exceeds the whole capture window — that reintroduces the
+  old batch-only anti-pattern and makes analysis the bottleneck.
+- **Not OK:** infinite re-review loops, decorative extra agents, or re-opening
+  the entire matrix three more times “for confidence” without new evidence after
+  R3 already agreed — thrash without gain.
+- If analysis is falling behind capture: **scale up review fan-out** (more
+  workers), do **not** shallow the checks. If hardware is saturated: finish
+  capture, keep reviews draining in parallel as capacity frees; still avoid
+  thrifty rubber-stamps.
+
+Live concurrency N belongs only in status files. This skill mandates **deep
+parallel analysis under a capture-dominated suite timeline**, not a fixed minute
+budget per file.
+
+### Forbidden thrift on analysis
+
+- One mid-play still as the only video evidence for a ≥20s recording  
+- Directory listing + prior `BAD: none` → ship  
+- Single agent writing 105 `all_good` sidecars in one burst without image-tool opens  
+- Skipping menu/mode/game_over frames because “we care about play”  
+- Skipping post-dash / mid-play / late-play frames because “journey looked fine early”  
+- Collapsing discovery into “walk ids I already know” only  
+- Preferring a fast green A7 over a slow red one when pixels look wrong  
+- Serializing all review after capture “to keep it simple” when workers could fan out  
+
+### Required generosity on analysis
+
+- Prefer **more stills, more opens, more parallel agents** over fewer  
+- Prefer **finding one real BAD** over closing the gate early  
+- Prefer **updating criteria** when a new failure class appears over ignoring it  
+- Prefer **keeping review pool full** whenever finished units exist and capture
+  is still running (or has just finished with a short tail)
 
 ## Vocabulary — CAPTURE vs REVIEW (do not conflate)
 
@@ -98,10 +172,10 @@ had nested borders, glyph tofu, and dead chrome.
 | **results.json / emulator_results.json `ok: true`** | Same runners | Same as CAPTURE_OK for that named check | Visual or play-quality acceptance |
 | **N/N passed** in suite summary | Same runners | N capture checks ok / total checks | N units **reviewed** clean |
 | **A5 VERIFY** | `VERIFY_ONLY=1 viewport_shots` | All `expected_cells` files **exist** and non-empty | Images were opened or look correct |
-| **A4b / A6 review** | Agent opens video/stills/PNGs + writes **per-file `*.review.json`** + rollup critiques | Human-grade (agent image-tool) judgment vs `qa_success_criteria.json` | Capture succeeded |
-| **`*.review.json` sidecar** | Agent only, after analyzing that file | Proof **this** artifact was opened and judged (`verdict: all_good` or issues) | CAPTURE_OK; empty file; copy-paste without open |
-| **CRITIQUE / VIDEO line `BAD: none`** | A4b or A6 only | Every applicable criterion for that artifact was checked **on this-run pixels** and passed | Script printed CAPTURE_OK / PASS for that unit |
-| **A7 PRE-PROD PASS** | Agent gate after all critiques **and** sidecars | Every required artifact has a **this-run** `*.review.json` **and** rollup lines **and** no unaccepted BAD | Suite exit 0, 105 PNGs on disk, or “15/15 capture done” |
+| **A4b / A6 review** | Agents (prefer multi-role R1→R3, parallel across units) open media deeply + write **per-file `*.review.json`** + rollups | Human-grade judgment: discovery **and** criteria checklist **and** adversary | Capture succeeded; one-glance checklist |
+| **`*.review.json` sidecar** | Agent only, after analyzing that file | Proof **this** artifact was opened (multi-frame if video), discovery+checklist (+adversary), `verdict` | CAPTURE_OK; empty file; copy-paste without open |
+| **CRITIQUE / VIDEO line `BAD: none`** | A4b or A6 only | Discovery found nothing material **and** every applicable criterion passed **and** adversary agrees on this-run pixels | Script CAPTURE_OK; “ids I know are fine” |
+| **A7 PRE-PROD PASS** | Agent gate after all deep reviews | This-run sidecars (with discovery/adversary evidence) + rollups + no unaccepted BAD/OPEN-* | Suite exit 0; post-capture serial skim only |
 
 ### Hard rules
 
@@ -113,14 +187,15 @@ had nested borders, glyph tofu, and dead chrome.
    Never write “A4 PASS” alone.
 3. **Pipeline:** capture finish → **then** A4b ∥ A6. Artifact on disk is necessary
    for review, not sufficient for ship.
-4. **Review of a file is complete only when** the agent has analyzed that file
-   (image tool / stills / video sample) **and** written its **`*.review.json`**.
-   A rollup CRITIQUE/VIDEO line without the sidecar is **incomplete**.
-5. **A7 inputs are sidecars + critiques + criteria**, not `results.json` alone. Suite
-   `failed: 0` is a **prerequisite**, not the gate.
-6. If a worker says “15/15 PASS open_bads none” without **sidecars** + **opened**
-   CRITIQUE/VIDEO lines under criteria ids, treat that as **unproven** until
-   re-checked.
+4. **Review of a file is complete only when** media was opened deeply (multi-frame
+   for video), discovery + checklist (+ adversary on ship path) ran, and
+   **`*.review.json`** was written. Rollup without sidecar is **incomplete**.
+5. **A7 inputs are sidecars + critiques + criteria + rubber-stamp spot-check**,
+   not `results.json` alone. Suite `failed: 0` is a **prerequisite**, not the gate.
+6. If a worker says “15/15 PASS open_bads none” without deep sidecars + opened
+   media evidence, treat as **unproven** until re-checked.
+7. **Analysis runs in parallel** with capture and other reviews so capture remains
+   the suite limiter; do not thrift depth to “beat the clock” when workers are idle.
 
 ### Anti-pattern (this was the real failure mode)
 
@@ -129,6 +204,107 @@ BAD:  e2e 240/240 PASS  →  write BAD: none on every critique  →  A7 PASS  �
 GOOD: e2e CAPTURE_OK 240/240  →  open each PNG/video  →  write *.review.json per file
       →  CRITIQUE/VIDEO rollup  →  only then A7 if no open BADs
 ```
+
+### Anti-pattern (checklist-only / cheap analysis)
+
+```text
+BAD:  open criteria → tick known ids → if nothing matches, all_good → ship
+      (misses lateral panel clip, Dash text on stick, etc. until a human reports)
+GOOD: DISCOVER freeform issues on pixels first (no id required)
+   → MAP issues to criterion ids (or OPEN-*/propose criteria edit)
+   → CHECKLIST every id for that screen (must not skip)
+   → ADVERSARIAL second pass whose job is to find one fail
+   → only then all_good / BAD: none
+```
+
+Checklist compliance alone is **not** product taste. Criteria are a **floor**
+(you must check every listed id) **and** a **growing ontology** (new visual
+failure classes must become new ids). They are **not** a ceiling that forbids
+reporting something ugly without a pre-existing id.
+
+## Multi-role visual review (required — use multiple agents)
+
+Review of a matrix unit (or phone cell) is **not** one skim. Prefer **separate
+subagents** when the unit has multiple PNGs + a video (width is parallel-eligible).
+A single agent may only combine roles if it still produces **all** role outputs
+below and does not skip depth to “finish the unit.”
+
+### Roles
+
+| Role | Goal | Output | Parallel? |
+|------|------|--------|-----------|
+| **R1 Discover** | Adversarial product eye: what looks wrong, clipped, overlapping, unfair, unreadable, wrong state, dead chrome — **before** optimizing for known ids | Freeform issue list with frame/file pointers (paths + timestamps) | ∥ R1 of other units; serial before that unit’s R2 if one agent |
+| **R2 Map + checklist** | Map each issue to `qa_success_criteria.json` id; walk **full** `review_checklist_by_screen` (+ fairness / SIM for playing); write sidecars + rollup lines | `*.review.json` + CRITIQUE/VIDEO lines; proposed criteria edits if needed | After R1 for same unit; ∥ other units |
+| **R3 Adversary** | Independent pass whose **only success metric is finding a miss** R1/R2 left as `all_good` / `BAD: none` | Confirm or escalate; never “agree to ship faster” | After R2 for same unit (or same-time on a **held-out** still set) |
+| **R4 Criteria steward** (when any OPEN-* / new class) | Edit `scripts/qa_success_criteria.json` (new id, known_fail_examples, checklist membership) | Criteria PR/diff in-tree; re-run R2 on affected artifacts | Serial with shared criteria file writer |
+
+**Orchestrator default:** for each finished matrix unit, spawn **R1 ∥ (optional
+second discover on video vs PNGs)** → **R2** → **R3**. Do not wait for the full
+matrix before starting R1 on unit U. Keep **many units’ review chains in flight**
+while capture continues so suite wall-clock stays capture-bound; a single unit’s
+R1→R3 may outlast that unit’s capture. Analysis wall-time >> one tool call is
+fine — shallow parallel is still thrift.
+
+### R1 Discover — how to look (mandatory geometry + chrome scan)
+
+When the image tool (or stills) is open, agents **must** actively scan — not
+only name the screen:
+
+1. **Full frame edges** — all four sides of the **game canvas** and of any
+   **panel blue border**: is the border complete, or cut on left/right/top/bottom?
+2. **Text vs edges** — any glyph clipped by panel, canvas, safe area, or field border?
+3. **Overlaps** — status/HUD text on stick or DASH; START on help; score under chrome;
+   controls inside field; labels through borders.
+4. **State truth** — filename/inventory claim vs visible screen (`V-STATE-MATCH`).
+5. **Form factor** — stick/DASH only on handheld play; desktop has none; copy matches.
+6. **Entities** — stars/hazards/player inside blue play rect (not in deck/grips/HUD).
+7. **Time (video)** — sample **early, mid, late**, and **after dash / after mode change**,
+   not one representative frame. Prefer ≥6 stills across a ≥20s play segment when
+   stills exist; extract more with ffmpeg if needed (analysis cost OK).
+8. **Transient HUD** — cooldown strings (`Dash 0.Xs`), combo, banners — appear only
+   sometimes; seek them; if present over controls → issue.
+9. **Ugly without a name** — if it would make a player wince and no id fits, still
+   record it (see OPEN-* below). Do **not** drop it to keep the gate green.
+
+R1 does **not** need criterion ids. Plain language is required.
+
+### Mapping issues (R2) — ids, OPEN-*, criteria growth
+
+For each R1 issue:
+
+1. Prefer an existing id in `qa_success_criteria.json` (visual / input / video /
+   fairness / SIM / artifact).
+2. If none fits: use provisional id **`OPEN-{SHORT-SLUG}`** in the sidecar
+   `issues[]` and rollup BAD line (severity: treat as **blocker** until mapped or
+   user-accepted). Example: `OPEN-PANEL-LATERAL-CLIP`, `OPEN-DASH-TEXT-ON-STICK`.
+3. **Same turn or immediate follow-up:** R4 (or R2 if combined) **must** edit
+   `scripts/qa_success_criteria.json` to:
+   - add a durable criterion id (or extend an existing check text),
+   - add `known_fail_examples` pointing at **this-run** artifact paths/stills,
+   - add the id to the correct `review_checklist_by_screen` / fairness / SIM lists,
+   - bump `version` / `updated` when the schema meaningfully grows.
+4. Re-map OPEN-* → stable id on the sidecar before calling A7 PASS (or leave OPEN-*
+   as open BAD — either blocks ship).
+
+**Never:** drop an OPEN-* issue because “criteria didn’t list it.”  
+**Never:** `all_good` while OPEN-* or unmapped freeform issues remain for that file.
+
+### R3 Adversary — anti-rubber-stamp
+
+R3 opens **at least**:
+
+- every matrix PNG for the unit that R2 marked `all_good`, and  
+- ≥3 video stills (or mid-play samples) for recordings marked `all_good`, and  
+- any `known_fail_examples` paths that match this format/screen  
+
+R3 asks: “Would a careful human fail this?” If yes → force `verdict: issues`,
+update rollup, block A7. R3 **fails the process** if it only re-reads R2’s
+summary without re-opening media.
+
+When many units claim all_good, orchestrator may run **one R3 batch** that
+spot-checks a **risk-weighted** set (all phone portrait menu/mode/playing, all
+short landscape, any format with prior OPEN-*, random 10% of desktop) — but
+**ship-critical handhelds and any unit R1 flagged** always get full R3.
 
 ## Per-artifact review files (required)
 
@@ -158,13 +334,21 @@ opened; **primary** gate is matrix PNG + primary recording sidecars.
   "artifact_kind": "matrix_png",
   "reviewed_at": "2026-07-17T21:00:00Z",
   "reviewer": "agent",
+  "review_roles_completed": ["discover", "map_checklist", "adversary"],
   "run_start_unix": 1784321756,
   "opened": true,
+  "frames_or_stills_opened": [
+    "screenshots/viewports/phone_landscape_04_playing.png"
+  ],
+  "discovery_notes": [
+    "Full blue field border visible; stick left grip clear of field; no HUD on DASH"
+  ],
   "verdict": "all_good",
   "summary": "all good",
   "issues": [],
-  "criteria_checked": ["V-STATE-MATCH", "V-PLAY-SINGLE-BORDER", "V-PLAY-CONTROLS-OUTSIDE-FIELD"],
-  "sim_scenarios_checked": []
+  "criteria_checked": ["V-STATE-MATCH", "V-PLAY-SINGLE-BORDER", "V-PLAY-CONTROLS-OUTSIDE-FIELD", "V-PLAY-HUD-CLEAR", "V-OVERLAP"],
+  "sim_scenarios_checked": [],
+  "adversary_reviewed": true
 }
 ```
 
@@ -176,51 +360,78 @@ opened; **primary** gate is matrix PNG + primary recording sidecars.
   "artifact_kind": "e2e_video",
   "reviewed_at": "2026-07-17T21:05:00Z",
   "reviewer": "agent",
+  "review_roles_completed": ["discover", "map_checklist", "adversary"],
   "run_start_unix": 1784321756,
   "opened": true,
-  "verdict": "issues",
-  "summary": "Stick knob left the ring at max deflect; mid-play HUD clip",
-  "issues": [
-    { "id": "SIM-STICK-MAX-DEFLECT", "detail": "knob outside white ring ~t=12s" },
-    { "id": "VID-HUD-USABLE", "detail": "Dash 0.4s sits on bottom border" }
+  "frames_or_stills_opened": [
+    "stills/t05.jpg",
+    "stills/t30.jpg",
+    "stills/t45.jpg",
+    "stills/t60.jpg",
+    "stills/t75.jpg"
   ],
-  "criteria_checked": ["VID-JOURNEY", "SIM-PLAY-STICK-NORMAL", "SIM-STICK-MAX-DEFLECT"],
-  "sim_scenarios_checked": ["SIM-PLAY-STICK-NORMAL", "SIM-STICK-MAX-DEFLECT"]
+  "discovery_notes": [
+    "t75: grey 'Dash 0.5s' between stick and DASH button",
+    "t75: red hazard below blue play border over control deck"
+  ],
+  "verdict": "issues",
+  "summary": "Dash cooldown text on chrome; hazard OOB below field",
+  "issues": [
+    { "id": "V-PLAY-HUD-CLEAR", "detail": "Dash 0.5s between stick and DASH ~t75" },
+    { "id": "V-PLAY-ENTITIES-IN-BOUNDS", "detail": "hazard fully below play border t75" }
+  ],
+  "criteria_checked": ["VID-JOURNEY", "V-PLAY-HUD-CLEAR", "V-OVERLAP", "V-PLAY-ENTITIES-IN-BOUNDS", "SIM-DASH-VISUAL-FEEDBACK"],
+  "sim_scenarios_checked": ["SIM-PLAY-STICK-NORMAL", "SIM-DASH-VISUAL-FEEDBACK"],
+  "adversary_reviewed": true
 }
 ```
 
 | Field | Rules |
 |-------|--------|
 | `opened` | Must be **true**. Agent must have used image tool / stills / video sample on **this** artifact. |
+| `frames_or_stills_opened` | Paths or timestamps actually opened. Video: **≥3** times; prefer **≥6** for ≥20s play. Missing/empty → incomplete. |
+| `discovery_notes` | R1 freeform findings (may be empty array only after a real geometry scan that found nothing). |
+| `review_roles_completed` | `discover`, `map_checklist`, `adversary` as applicable. Ship path needs all three (or combined pass that still re-opened media for adversary). |
+| `adversary_reviewed` | **true** only after R3 re-opened media (not rubber-stamp of R2 text). |
 | `verdict` | **`all_good`** or **`issues`** only. |
-| `summary` | If all good: exactly short phrase like **`all good`**. If issues: human-readable what’s wrong. |
-| `issues` | Empty array when `all_good`; otherwise ≥1 objects with `id` (criterion or `SIM-*`) + `detail`. |
-| `run_start_unix` | Should match this QA pass so stale sidecars from prior runs do not count. |
+| `summary` | If all good: short phrase like **`all good`**. If issues: human-readable what’s wrong. |
+| `issues` | Empty when `all_good`; else ≥1 `{ id, detail }` with criterion, `SIM-*`, or `OPEN-*`. |
+| `run_start_unix` | This QA pass so stale sidecars do not count. |
 
 ### When to write
 
-1. Open the artifact (image tool for PNGs; stills and/or sample video for recordings).
-2. Walk applicable criteria / `SIM-*` checklists.
-3. **Write `*.review.json` immediately** for that file.
-4. Update rollup `CRITIQUE` / `VIDEO` line (must stay consistent with sidecar `verdict` / `issues`).
+1. **R1:** Open media (PNG image tool; many stills / sample for video). Geometry + chrome scan → discovery notes.
+2. **R2:** Map → ids / OPEN-*; full screen checklist + SIM/fairness as applicable.
+3. Write/update **`*.review.json`** (update again after R3).
+4. Rollup CRITIQUE/VIDEO line must match sidecar.
+5. **R3:** Re-open media; flip to `issues` if miss found.
+6. **R4** if OPEN-* / new class → edit criteria before A7 PASS.
 
 ### Completeness rules
 
-- Review of file **F** is **incomplete** until **F.review.json** exists with
-  `opened: true` and a valid `verdict`.
-- A7 must verify sidecars exist for **all** expected matrix cells and **all**
-  required recordings for this run (mtime/`run_start_unix` fresh).
-- Sidecar `verdict: issues` ⇔ rollup line must not say `BAD: none` for that unit.
-- Sidecar `verdict: all_good` ⇔ rollup may use `BAD: none` only if still true under criteria.
-- **Do not** invent sidecars without opening the media. **Do not** batch-write
-  105 “all good” files from a directory listing.
+- Review of **F** incomplete until **F.review.json** has `opened: true`, valid
+  `verdict`, discovery evidence (`discovery_notes` and/or `frames_or_stills_opened`),
+  and adversary done on ship path.
+- A7 needs this-run sidecars for all expected matrix cells + required recordings.
+- `verdict: issues` ⇔ rollup must not say `BAD: none`.
+- `verdict: all_good` ⇔ rollup `BAD: none` only if criteria + discovery + adversary agree.
+- **Do not** invent sidecars without opening media. **Do not** batch-write
+  105 `all_good` files from a directory listing.
+- **Do not** shallow analysis to save time when capture already paid the cost —
+  fan out workers instead so suite time stays capture-bound.
 
 ### Anti-patterns
 
-- Writing only `matrix_critique.md` / `video_critique.md` with no per-file sidecars
+- Writing only rollup markdown with no per-file sidecars
 - One sidecar for a whole format folder instead of one per PNG/video
-- `opened: false` or missing field while claiming review done
-- Stale sidecar from a previous `run_start_unix` reused as this-run proof
+- `opened: false` / missing fields while claiming review done
+- Stale `run_start_unix` reused as this-run proof
+- `all_good` with empty `frames_or_stills_opened` or no discovery pass
+- Skipping R3 because “R2 already looked”
+- Suppressing OPEN-* because no criterion id existed yet
+- One still for an entire ≥20s video
+- Serial review-only phase longer than the capture phase because reviews never
+  started until capture fully exited
 
 ## Chain rule — always start the next task
 
@@ -264,10 +475,10 @@ waiting for a human “go ahead.”
 | Just finished | Must still do next |
 |---------------|--------------------|
 | A2 build | A3 serve → A4 pipeline (capture + review) |
-| One **matrix unit** **capture** done (video + matrix PNGs on disk = CAPTURE_OK only) | **Immediately** start **A4b + A6 for that unit** (review is a **separate** step — do **not** wait for other units) |
-| A4b/A6 for unit U while other units still capturing | Keep reviewing finished units; keep capture pool full |
-| All matrix units **captured** (suite may be CAPTURE_OK) | **Not done** until every unit also has A4b+A6 **sidecars** + critique lines |
-| All matrix units captured **and** all unit reviews written (sidecars + rollups) | A5 verify (file presence only) → **A7** pre-prod (review gate) |
+| One **matrix unit** **capture** done (CAPTURE_OK only) | **Immediately** start **deep A4b + A6 (R1→R3)** for that unit — do **not** wait for other units |
+| A4b/A6 for unit U while other units still capturing | Keep **review fan-out full** on finished units; keep capture pool full |
+| All matrix units **captured** (CAPTURE_OK) | **Not done** until every unit has deep sidecars + rollups + adversary (short trailing drain only) |
+| All units captured **and** all deep reviews written | A5 verify → **A7** pre-prod |
 | A7 PASS (review, not capture) | **Phase B immediately** (commit + push + Pages watch) — do not wait for user |
 | B2 deploy success | B3 live smoke; if physical phone → Phase C |
 | C phone fail | Phase A fix loop, not stop |
@@ -346,21 +557,21 @@ Extracted video stills help A4b only — they are **not** matrix cells.
 A4 PIPELINE (matrix units from qa_matrix.json formats[]):
   start capture pool (CONCURRENCY units at a time)
   whenever matrix unit U finishes capture (video + PNGs on disk):
-      IMMEDIATELY start in parallel:
-        A4b: open recording/stills → write recordings/{name}.review.json
-             → append/update VIDEO line in video_critique.md
-        A6:  open each matrix PNG → write viewports/{cell}.review.json
-             → append/update CRITIQUE line in matrix_critique.md
-      (do this while other units still capture / other reviews run)
-  when all units captured AND all sidecars + rollups written:
-      A5 verify matrix complete → A7 pre-prod gate (sidecars required)
+      IMMEDIATELY fan out analysis (do not wait for other captures):
+        A4b R1→R2→R3 on video  ∥  A6 R1→R2→R3 on that unit's PNGs
+        (prefer separate subagents; deep multi-frame / geometry OK)
+      keep review workers busy on every finished unit while capture continues
+  when all units captured AND all deep reviews (sidecars + rollups + adversary) done:
+      A5 verify matrix complete → A7 pre-prod gate
+  trailing review after last capture should be a short drain of in-flight R2/R3,
+  not a brand-new serial analysis of the whole matrix
 ```
 
 If the capture script runs as one process for all units, **do not** sit idle on
 that process: watch for per-unit artifacts (new `recordings/*`, new
-`viewports/{format_id}_*.png`, log lines) and start review for each finished
-unit as it appears. Subagents/background reviewers are preferred so capture
-keeps moving.
+`viewports/{format_id}_*.png`, log lines) and start **deep** review for each
+finished unit as it appears. Subagents are preferred so **capture keeps moving**
+and **analysis stays parallel** (suite bottleneck = capture, not a review queue).
 
 ## Ship order (read this first — do not reorder)
 
@@ -517,9 +728,11 @@ Apply in order. First true row wins for that edge.
 |------|-----|----------|
 | **Matrix units inside A4 capture** | `CONCURRENCY=<N>` pool (desktop: browser+CDP record; handheld: emulator+adb screenrecord/input + quality-hold PNGs) | 6; cap via 8 |
 | **Video encode of unit X** while **unit Y** still plays | Same pool; natural overlap | 6, 7; watch 8 |
-| **Review of finished unit U ∥ capture of other units** | **Required pipeline** — start A4b(U)+A6(U) the moment U’s artifacts exist | 5, 6, 7 |
-| **A4b(U) video review ∥ A6(U) matrix PNG review** | Same unit, two critique files / artifact trees | 5 |
-| **Reviews of different finished units** | Multiple readers / subagents; merge into critique files carefully | 5, 6 |
+| **Review of finished unit U ∥ capture of other units** | **Required pipeline** — start deep A4b(U)+A6(U) (R1→R3) the moment U’s artifacts exist | 5, 6, 7 |
+| **A4b(U) video review ∥ A6(U) matrix PNG review** | Same unit, two artifact trees; each may use its own R1/R2/R3 workers | 5 |
+| **Reviews of different finished units** | Multiple readers / subagents; keep pool full so suite stays capture-bound | 5, 6 |
+| **R1 discover ∥ other units’ R1/R2** | Freeform discovery is read-only on media | 5, 6 |
+| **R3 adversary batch** on risk-weighted all_good units | After those units’ R2; may ∥ trailing capture | 5, 6, 7 |
 | **A1 cargo test ∥** read code / draft notes | No capture artifacts shared | 5, 7 |
 | **A2 build wait ∥** review *prior-run* artifacts / read code | Wait overlap only — **do not** ship on old capture | 7 |
 | **A5 verify** while trailing unit reviews finish | Verify is read-only check of PNG presence | 5 (after those PNGs exist) |
@@ -555,9 +768,12 @@ unit lands. **Barrier is not** “A4 capture process exit 0 before any review.�
 | A4 capture (this run) ∥ full `viewport_shots` re-walk | **Forbidden** | 4 |
 | **Review unit U ∥ capture other units** | **Required parallel (pipeline)** | 5, 6, 7 |
 | A4b(U) ∥ A6(U) for same finished unit | **Parallel** | 5 |
-| Reviews of different finished units | **Parallel** | 6 |
+| R1 → R2 → R3 within one artifact | **Serial roles** (same file); depth OK if suite fans out | 1 |
+| Reviews of different finished units | **Parallel** (prefer many workers) | 6 |
+| R4 criteria file edit | **Serial** writer on `qa_success_criteria.json` | 2 |
 | A5 verify | After PNGs exist; may ∥ trailing reviews | 1, 5 |
-| A7 pre-prod gate | **Serial after all units reviewed** | 1, 3 |
+| A7 pre-prod gate | **Serial after all units reviewed** (incl. adversary) | 1, 3 |
+| Batch-all-review after all-capture | **Forbidden** (makes analysis the suite bottleneck) | anti-pattern |
 | B1 push | **Serial after A7 PASS** | 2, 3 |
 | B2 deploy watch ∥ report draft | **Parallel** | 7 |
 | B3 live smoke | **Serial after B2** | 1 |
@@ -604,6 +820,9 @@ unit lands. **Barrier is not** “A4 capture process exit 0 before any review.�
 - Parallel pushes / conflicting branches without a plan — criterion **2**
 - Adding a new skill step **without** updating this task map and criteria refs
 - “Screenshots while video runs” implemented as a **second full page load** instead of quality holds inside A4 capture — criteria **4**, **9**
+- **Cheap analysis** (one still, checklist-only, no adversary) because “capture already took long enough”
+- **Serial review phase** that alone exceeds the capture phase because reviews waited for full capture exit
+- Dropping R1 discovery / multi-frame video / OPEN-* to meet an arbitrary stopwatch while workers sit idle
 
 ---
 
@@ -613,7 +832,8 @@ unit lands. **Barrier is not** “A4 capture process exit 0 before any review.�
 unit’s recording (and stills, if any) exist — **not** only after the full
 capture job exits. May run **in parallel with A6 for the same unit**, and in
 parallel with capture/review of **other** units. Every unit must be covered
-before A7.
+before A7. Use multi-role review (R1 discover → R2 map/checklist → R3 adversary).
+**Depth over thrift**; fan out so the suite does not wait on one serial video critic.
 
 ### Where
 
@@ -638,17 +858,19 @@ VIDEO laptop_hd_mouse: GOOD: no stick chrome, point-to-move + right-dash | BAD: 
 
 - **Authority:** [`scripts/qa_success_criteria.json`](../../scripts/qa_success_criteria.json)
   → `input_criteria`, `video_criteria`, and the same visual ids when stills show
-  layout bugs (`VID-VISUAL-SAME-AS-MATRIX`).
-- Prefer opening extracted stills under `screenshots/web/e2e/stills/{recording}/`
-  (several frames across the timeline) **or** sample the `.webm` if needed.
+  layout bugs (`VID-VISUAL-SAME-AS-MATRIX`). Criteria are a **floor**; R1 may
+  still find OPEN-* issues not yet listed.
+- Open extracted stills under `screenshots/web/e2e/stills/{recording}/` across
+  **early / mid / late / post-dash** (prefer **≥6** for ≥20s play). Extract more
+  with ffmpeg if thin — analysis cost is OK when parallelized. Sample the
+  `.webm`/`.mp4` when stills are insufficient.
 - Listing `recordings/` is **not** review.
 - Cover **each** recording **when that matrix unit finishes**:
-  1. Analyze media (image tool / stills / sample).
-  2. Write **`screenshots/web/e2e/recordings/{name}.review.json`**
-     (`verdict: all_good` or `issues` + details).
-  3. Append/update the **VIDEO** rollup line (must match sidecar).
-- Confirm before A7: every required recording has a **this-run** sidecar **and**
-  a VIDEO line.
+  1. **R1** freeform discovery (geometry, transient HUD, motion feedback).
+  2. **R2** map + full applicable checklists → sidecar + VIDEO line.
+  3. **R3** adversary re-open (≥3 stills if R2 said all_good).
+  4. **R4** if OPEN-* → grow criteria file.
+- Confirm before A7: this-run sidecar (with frames + adversary) **and** VIDEO line.
 
 ### Video checklist (A4b)
 
@@ -699,18 +921,19 @@ CRITIQUE laptop_hd_02_menu: GOOD: keyboard control copy, no touch chrome | BAD: 
 ### Rules
 
 - **Authority:** [`scripts/qa_success_criteria.json`](../../scripts/qa_success_criteria.json)
-  — open it; walk `review_checklist_by_screen` for that shot; cite criterion
-  **ids** on every non-`none` BAD.
-- **GOOD** and **BAD** both required (use `BAD: none` only when **every**
-  applicable criterion passes).
-- Open **each** matrix PNG with the image tool (not directory listing).
-- **Immediately** write **`screenshots/viewports/{format}_{shot}.review.json`**
-  for that PNG (`opened: true`, `verdict`, `summary` / `issues`).
-- Then append/update the **CRITIQUE** rollup line (must match sidecar).
-- Review a unit’s cells **when that unit’s capture finishes** (all
-  `{format_id}_0*.png` for that format id), not only after the whole matrix.
-- User may accept residual BADs in writing **by criterion id**; document that
-  at ship time.
+  — open it; walk **full** `review_checklist_by_screen` for that shot; cite
+  criterion **ids** on every non-`none` BAD. Also run **R1 discovery** first
+  (panel laterals, text clip, overlaps) — checklist alone is insufficient.
+- **GOOD** and **BAD** both required (`BAD: none` only when discovery + every
+  applicable criterion + adversary agree).
+- Open **each** matrix PNG with the image tool (not directory listing). Fan out
+  PNG reviews across agents when a unit has many cells.
+- Write **`screenshots/viewports/{format}_{shot}.review.json`** after R1/R2;
+  update after R3 (`opened`, frames, discovery_notes, verdict, issues).
+- Append/update **CRITIQUE** rollup (must match sidecar).
+- Review a unit’s cells **when that unit’s capture finishes**, not only after
+  the whole matrix — keeps suite capture-bound.
+- User may accept residual BADs in writing **by criterion id** (or OPEN-*).
 - Filename is not state proof (`*_04_playing` showing menu → `V-STATE-MATCH` /
   `A-LABEL-TRUTH` FAIL).
 - **No sidecar = that PNG is not reviewed**, even if a CRITIQUE line exists.
@@ -754,23 +977,23 @@ regress it to fix phones.
    PNGs on disk; suite failed count 0 for the ship paths used this run.
 2. Confirm **per-artifact review sidecars**: every expected matrix PNG and every
    required recording has a sibling **`*.review.json`** with `opened: true`,
-   valid `verdict`, and `run_start_unix` (or mtime) for **this** pass.
-3. Open **`scripts/qa_success_criteria.json`** (criteria authority) plus
-   **both** `screenshots/web/e2e/video_critique.md` **and**
-   `screenshots/viewports/matrix_critique.md`.
-4. Confirm **every** matrix cell and **every** required recording has a
-   CRITIQUE/VIDEO line for **this run** (not only that files exist).
-5. Collect every line in **either** critique file where `BAD:` is not exactly
-   `none` (or still cites unaccepted criterion ids). Also treat any sidecar
-   `verdict: issues` as an open BAD if not reflected/fixed.
-6. Spot-check that this-run artifacts do not still match
-   `known_fail_examples` in the criteria file while critiques/`all_good` sidecars
-   claim clean (rubber-stamp detector — open the PNG/stills with the image tool).
-7. **If capture prereqs hold, sidecars complete, both BAD lists empty, and
-   spot-check is clean** → **PRE-PROD REVIEW: PASS**. **Immediately** proceed
-   to Phase B — do not wait for the user.
-8. **If capture incomplete, sidecars missing, any BAD remains, or rubber-stamp
-   spot-check fails** → **PRE-PROD REVIEW: FAIL**. Do **not** push. Fix loop:
+   valid `verdict`, this-run `run_start_unix` (or mtime), discovery evidence
+   (`frames_or_stills_opened` / `discovery_notes`), and **adversary** completed
+   on ship-path artifacts (no OPEN-* left unmapped unless accepted).
+3. Open **`scripts/qa_success_criteria.json`** plus **both** critique rollups.
+4. Confirm **every** matrix cell and required recording has a this-run
+   CRITIQUE/VIDEO line.
+5. Collect every rollup line where `BAD:` is not exactly `none`, and every
+   sidecar `verdict: issues` / OPEN-*.
+6. **Rubber-stamp detector (required, may fan out):** re-open
+   `known_fail_examples` paths and a risk-weighted sample of `all_good`
+   handheld menu/mode/playing stills with the image tool. Fail A7 if examples
+   still match while critiques claim clean.
+7. Confirm review was **pipelined** (not a single post-capture serial skim of
+   the whole matrix) — status/logs/worker history or staggered sidecar mtimes.
+8. **If** capture OK, deep reviews complete, BAD lists empty, rubber-stamp clean
+   → **PRE-PROD REVIEW: PASS** → Phase B immediately.
+9. **Else** → **PRE-PROD REVIEW: FAIL**. Do **not** push. Fix loop:
 
 ```text
 START OF FIX LOOP
@@ -805,17 +1028,23 @@ END LOOP — until every BAD is "none" (or user-accepted in writing)
 - **Do not** leave headless Chrome/Puppeteer orphans.
 - **Do not** wait for the user after a true **PRE-PROD REVIEW: PASS** — proceed to
   Phase B (commit + push + deploy watch) per the chain rule.
+- **Do not** pass A7 on checklist-only reviews without discovery + adversary.
+- **Do not** create a long serial analysis-only phase after capture when reviews
+  could have run in parallel during capture.
 
 ### Review checklist output (put in final report)
 
 ```text
 CAPTURE: OK | FAIL   (suite exit / artifacts present — not visual)
 A5_presence: OK | FAIL
-sidecar_reviews: OK | FAIL   (every required PNG/video has this-run *.review.json, opened:true)
+sidecar_reviews: OK | FAIL   (this-run *.review.json, opened:true, frames listed)
+discovery_and_adversary: OK | FAIL
+open_OPEN_star_or_unmapped: N
 PRE-PROD REVIEW (A7): PASS | FAIL
 open_bads_video: N
 open_bads_matrix: N
-review_evidence: opened images/stills for this run (yes/no)
+review_evidence: multi-frame / geometry scan this run (yes/no)
+pipeline_review_during_capture: yes | no
 (if FAIL) next_action: patch + full retest from suite start
 (if PASS) proceeding_to: commit / push / deploy watch
 ```
@@ -873,14 +1102,14 @@ query are unaffected.
 
 ---
 
+
 ### Reference layout note
 
 Script names (`e2e_inputs.mjs`, `viewport_shots.mjs`, `qa_matrix.json`) and
 paths under `screenshots/` are the **reference layout** from the cycle that
-proved this process. Map them to the current project (`e2e/`, Flutter web,
-Pages vs VPS, port overrides, etc.). The **process** (pipeline, sidecars,
-CAPTURE vs REVIEW, emulator handhelds, baseline vs full matrix) is mandatory;
-exact filenames are not.
+proved this process. Map them to the current project. The **process** (pipeline,
+multi-role deep review, sidecars, CAPTURE vs REVIEW, emulator handhelds,
+baseline vs full matrix) is mandatory; exact filenames are not.
 
 ## Builds — wait as long as needed
 
@@ -1055,9 +1284,10 @@ node scripts/e2e_phone.mjs
 # Artifacts: screenshots/web/phone/recordings/*.mp4, touch_inventory.md, results.json
 ```
 
-Review each phone cell’s **video as that cell finishes** (same pipeline idea:
-do not wait for all four cells before reviewing the first). Treat inventory
-FAILs as ship blockers.
+Review each phone cell’s **video as that cell finishes** with the same **deep
+multi-role** process (R1→R2→R3, multi-frame stills, OPEN-* allowed). Do not wait
+for all four cells before reviewing the first; fan out so phone capture stays
+the limiter. Inventory FAILs and visual BADs are ship blockers.
 
 ---
 
@@ -1197,6 +1427,6 @@ phase A, not a silent ship.
 - Matrix PNG critique: `screenshots/viewports/matrix_critique.md`
 - **Per-file reviews:** `screenshots/viewports/*.review.json`, `screenshots/web/e2e/recordings/*.review.json`
 - Physical phone artifacts: `screenshots/web/phone/recordings/`, `touch_inventory.md`
-- Input rules: `skills/game-input-e2e/SKILL.md`
+- Input rules: sibling skill `game-input-e2e` or `app-input-e2e`
 - Scale: `src/ui_scale.rs` (`ViewportClass` / `classify_viewport`)
 - Pages: `.github/workflows/pages.yml`

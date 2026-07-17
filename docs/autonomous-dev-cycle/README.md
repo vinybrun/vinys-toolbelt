@@ -6,7 +6,7 @@ Merged process for shipping UI with local matrix QA, honest review, then deploy.
 
 | Source | What it contributed |
 |--------|---------------------|
-| **1st-rust-game** | Pipeline per matrix unit; CAPTURE vs REVIEW; **`*.review.json` sidecars**; SIM-* input simulation; fairness (F-*) criteria; Android emulator handhelds; richest `qa_success_criteria.json` |
+| **1st-rust-game** | Pipeline per matrix unit; CAPTURE vs REVIEW; **deep multi-role review (R1→R3)**; **`*.review.json` sidecars** (discovery/adversary fields); SIM-* + fairness; capture-bound suite timing; richest criteria |
 | **Compre Barato Alagoas** | **Baseline vs full matrix**; missing runners must be **built**, not skipped; stack map pattern; layer-aware A1; `app-input-e2e` for non-game UIs; VPS/Flutter path examples |
 
 ## Layout
