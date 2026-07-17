@@ -1,0 +1,1299 @@
+{
+  "skipped": false,
+  "path": "android_emulator",
+  "serial": "emulator-5554",
+  "model": "sdk_gphone64_x86_64",
+  "play_ms": 20000,
+  "force_go_ms": 22500,
+  "go_grace_ms": 20000,
+  "formats": [
+    "phone_samsung_ultra",
+    "phone_samsung_ultra_landscape",
+    "phone_rodin",
+    "phone_rodin_chrome",
+    "phone_rodin_landscape",
+    "tablet_portrait",
+    "tablet_landscape",
+    "tablet_large_portrait"
+  ],
+  "results": [
+    {
+      "name": "phone_samsung_ultra/canvas",
+      "ok": true,
+      "detail": "412x783"
+    },
+    {
+      "name": "phone_samsung_ultra/webgl",
+      "ok": true,
+      "detail": "maxVUV=1024 ANGLE (Google (AMD), Android Emulator OpenGL ES Translator ("
+    },
+    {
+      "name": "phone_samsung_ultra/matrix 01_boot",
+      "ok": true,
+      "detail": "220647b screencap"
+    },
+    {
+      "name": "phone_samsung_ultra/boot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_samsung_ultra/matrix 02_menu",
+      "ok": true,
+      "detail": "121937b screencap"
+    },
+    {
+      "name": "phone_samsung_ultra/menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_samsung_ultra/modes+diffs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_samsung_ultra/matrix 03_mode_select",
+      "ok": true,
+      "detail": "98843b screencap"
+    },
+    {
+      "name": "phone_samsung_ultra/enter_playing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_samsung_ultra/matrix 04_playing",
+      "ok": true,
+      "detail": "60310b screencap"
+    },
+    {
+      "name": "phone_samsung_ultra/playing_shot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_samsung_ultra/play20s",
+      "ok": true,
+      "detail": "steps=38 play_ms=19000"
+    },
+    {
+      "name": "phone_samsung_ultra/game_over_state",
+      "ok": true,
+      "detail": "go ok force_ms=22500"
+    },
+    {
+      "name": "phone_samsung_ultra/matrix 05_game_over",
+      "ok": true,
+      "detail": "86671b screencap"
+    },
+    {
+      "name": "phone_samsung_ultra/game_over_shot",
+      "ok": true,
+      "detail": "state=game_over"
+    },
+    {
+      "name": "phone_samsung_ultra/recording",
+      "ok": true,
+      "detail": "21121109 bytes"
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/canvas",
+      "ok": true,
+      "detail": "915x304"
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/webgl",
+      "ok": true,
+      "detail": "maxVUV=1024 ANGLE (Google (AMD), Android Emulator OpenGL ES Translator ("
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/matrix 01_boot",
+      "ok": true,
+      "detail": "202121b screencap"
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/boot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/matrix 02_menu",
+      "ok": true,
+      "detail": "93769b screencap"
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/modes+diffs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/matrix 03_mode_select",
+      "ok": true,
+      "detail": "79456b screencap"
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/enter_playing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/matrix 04_playing",
+      "ok": true,
+      "detail": "55391b screencap"
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/playing_shot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/play20s",
+      "ok": true,
+      "detail": "steps=39 play_ms=19000"
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/game_over_state",
+      "ok": true,
+      "detail": "go ok force_ms=22500"
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/matrix 05_game_over",
+      "ok": true,
+      "detail": "72303b screencap"
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/game_over_shot",
+      "ok": true,
+      "detail": "state=game_over"
+    },
+    {
+      "name": "phone_samsung_ultra_landscape/recording",
+      "ok": true,
+      "detail": "19439068 bytes"
+    },
+    {
+      "name": "phone_rodin/canvas",
+      "ok": true,
+      "detail": "375x707"
+    },
+    {
+      "name": "phone_rodin/webgl",
+      "ok": true,
+      "detail": "maxVUV=1024 ANGLE (Google (AMD), Android Emulator OpenGL ES Translator ("
+    },
+    {
+      "name": "phone_rodin/matrix 01_boot",
+      "ok": true,
+      "detail": "220573b screencap"
+    },
+    {
+      "name": "phone_rodin/boot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin/matrix 02_menu",
+      "ok": true,
+      "detail": "117719b screencap"
+    },
+    {
+      "name": "phone_rodin/menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin/modes+diffs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin/matrix 03_mode_select",
+      "ok": true,
+      "detail": "97414b screencap"
+    },
+    {
+      "name": "phone_rodin/enter_playing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin/matrix 04_playing",
+      "ok": true,
+      "detail": "62714b screencap"
+    },
+    {
+      "name": "phone_rodin/playing_shot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin/play20s",
+      "ok": true,
+      "detail": "steps=39 play_ms=19000"
+    },
+    {
+      "name": "phone_rodin/game_over_state",
+      "ok": true,
+      "detail": "go ok force_ms=22500"
+    },
+    {
+      "name": "phone_rodin/matrix 05_game_over",
+      "ok": true,
+      "detail": "86045b screencap"
+    },
+    {
+      "name": "phone_rodin/game_over_shot",
+      "ok": true,
+      "detail": "state=game_over"
+    },
+    {
+      "name": "phone_rodin/recording",
+      "ok": true,
+      "detail": "18729997 bytes"
+    },
+    {
+      "name": "phone_rodin_chrome/canvas",
+      "ok": true,
+      "detail": "376x573"
+    },
+    {
+      "name": "phone_rodin_chrome/webgl",
+      "ok": true,
+      "detail": "maxVUV=1024 ANGLE (Google (AMD), Android Emulator OpenGL ES Translator ("
+    },
+    {
+      "name": "phone_rodin_chrome/matrix 01_boot",
+      "ok": true,
+      "detail": "254975b screencap"
+    },
+    {
+      "name": "phone_rodin_chrome/boot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin_chrome/matrix 02_menu",
+      "ok": true,
+      "detail": "129930b screencap"
+    },
+    {
+      "name": "phone_rodin_chrome/menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin_chrome/modes+diffs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin_chrome/matrix 03_mode_select",
+      "ok": true,
+      "detail": "108682b screencap"
+    },
+    {
+      "name": "phone_rodin_chrome/enter_playing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin_chrome/matrix 04_playing",
+      "ok": true,
+      "detail": "67729b screencap"
+    },
+    {
+      "name": "phone_rodin_chrome/playing_shot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin_chrome/play20s",
+      "ok": true,
+      "detail": "steps=38 play_ms=19000"
+    },
+    {
+      "name": "phone_rodin_chrome/game_over_state",
+      "ok": true,
+      "detail": "go ok force_ms=22500"
+    },
+    {
+      "name": "phone_rodin_chrome/matrix 05_game_over",
+      "ok": true,
+      "detail": "96393b screencap"
+    },
+    {
+      "name": "phone_rodin_chrome/game_over_shot",
+      "ok": true,
+      "detail": "state=game_over"
+    },
+    {
+      "name": "phone_rodin_chrome/recording",
+      "ok": true,
+      "detail": "20426385 bytes"
+    },
+    {
+      "name": "phone_rodin_landscape/canvas",
+      "ok": true,
+      "detail": "834x267"
+    },
+    {
+      "name": "phone_rodin_landscape/webgl",
+      "ok": true,
+      "detail": "maxVUV=1024 ANGLE (Google (AMD), Android Emulator OpenGL ES Translator ("
+    },
+    {
+      "name": "phone_rodin_landscape/matrix 01_boot",
+      "ok": true,
+      "detail": "200814b screencap"
+    },
+    {
+      "name": "phone_rodin_landscape/boot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin_landscape/matrix 02_menu",
+      "ok": true,
+      "detail": "90788b screencap"
+    },
+    {
+      "name": "phone_rodin_landscape/menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin_landscape/modes+diffs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin_landscape/matrix 03_mode_select",
+      "ok": true,
+      "detail": "77219b screencap"
+    },
+    {
+      "name": "phone_rodin_landscape/enter_playing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin_landscape/matrix 04_playing",
+      "ok": true,
+      "detail": "56484b screencap"
+    },
+    {
+      "name": "phone_rodin_landscape/playing_shot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin_landscape/play20s",
+      "ok": true,
+      "detail": "steps=39 play_ms=19000"
+    },
+    {
+      "name": "phone_rodin_landscape/game_over_state",
+      "ok": true,
+      "detail": "go ok force_ms=22500"
+    },
+    {
+      "name": "phone_rodin_landscape/matrix 05_game_over",
+      "ok": true,
+      "detail": "70741b screencap"
+    },
+    {
+      "name": "phone_rodin_landscape/game_over_shot",
+      "ok": true,
+      "detail": "state=game_over"
+    },
+    {
+      "name": "phone_rodin_landscape/recording",
+      "ok": true,
+      "detail": "17743284 bytes"
+    },
+    {
+      "name": "tablet_portrait/canvas",
+      "ok": true,
+      "detail": "768x838"
+    },
+    {
+      "name": "tablet_portrait/webgl",
+      "ok": true,
+      "detail": "maxVUV=1024 ANGLE (Google (AMD), Android Emulator OpenGL ES Translator ("
+    },
+    {
+      "name": "tablet_portrait/matrix 01_boot",
+      "ok": true,
+      "detail": "315463b screencap"
+    },
+    {
+      "name": "tablet_portrait/boot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_portrait/matrix 02_menu",
+      "ok": true,
+      "detail": "124628b screencap"
+    },
+    {
+      "name": "tablet_portrait/menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_portrait/modes+diffs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_portrait/matrix 03_mode_select",
+      "ok": true,
+      "detail": "105781b screencap"
+    },
+    {
+      "name": "tablet_portrait/enter_playing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_portrait/matrix 04_playing",
+      "ok": true,
+      "detail": "72068b screencap"
+    },
+    {
+      "name": "tablet_portrait/playing_shot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_portrait/play20s",
+      "ok": true,
+      "detail": "steps=38 play_ms=19000"
+    },
+    {
+      "name": "tablet_portrait/game_over_state",
+      "ok": true,
+      "detail": "go ok force_ms=22500"
+    },
+    {
+      "name": "tablet_portrait/matrix 05_game_over",
+      "ok": true,
+      "detail": "112370b screencap"
+    },
+    {
+      "name": "tablet_portrait/game_over_shot",
+      "ok": true,
+      "detail": "state=game_over"
+    },
+    {
+      "name": "tablet_portrait/recording",
+      "ok": true,
+      "detail": "21458762 bytes"
+    },
+    {
+      "name": "tablet_landscape/canvas",
+      "ok": true,
+      "detail": "1024x597"
+    },
+    {
+      "name": "tablet_landscape/webgl",
+      "ok": true,
+      "detail": "maxVUV=1024 ANGLE (Google (AMD), Android Emulator OpenGL ES Translator ("
+    },
+    {
+      "name": "tablet_landscape/matrix 01_boot",
+      "ok": true,
+      "detail": "296477b screencap"
+    },
+    {
+      "name": "tablet_landscape/boot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_landscape/matrix 02_menu",
+      "ok": true,
+      "detail": "106455b screencap"
+    },
+    {
+      "name": "tablet_landscape/menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_landscape/modes+diffs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_landscape/matrix 03_mode_select",
+      "ok": true,
+      "detail": "87858b screencap"
+    },
+    {
+      "name": "tablet_landscape/enter_playing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_landscape/matrix 04_playing",
+      "ok": true,
+      "detail": "70183b screencap"
+    },
+    {
+      "name": "tablet_landscape/playing_shot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_landscape/play20s",
+      "ok": true,
+      "detail": "steps=38 play_ms=19000"
+    },
+    {
+      "name": "tablet_landscape/game_over_state",
+      "ok": true,
+      "detail": "go ok force_ms=22500"
+    },
+    {
+      "name": "tablet_landscape/matrix 05_game_over",
+      "ok": true,
+      "detail": "88600b screencap"
+    },
+    {
+      "name": "tablet_landscape/game_over_shot",
+      "ok": true,
+      "detail": "state=game_over"
+    },
+    {
+      "name": "tablet_landscape/recording",
+      "ok": true,
+      "detail": "17737059 bytes"
+    },
+    {
+      "name": "tablet_large_portrait/canvas",
+      "ok": true,
+      "detail": "821x987"
+    },
+    {
+      "name": "tablet_large_portrait/webgl",
+      "ok": true,
+      "detail": "maxVUV=1024 ANGLE (Google (AMD), Android Emulator OpenGL ES Translator ("
+    },
+    {
+      "name": "tablet_large_portrait/matrix 01_boot",
+      "ok": true,
+      "detail": "299265b screencap"
+    },
+    {
+      "name": "tablet_large_portrait/boot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_large_portrait/matrix 02_menu",
+      "ok": true,
+      "detail": "125611b screencap"
+    },
+    {
+      "name": "tablet_large_portrait/menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_large_portrait/modes+diffs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_large_portrait/matrix 03_mode_select",
+      "ok": true,
+      "detail": "106331b screencap"
+    },
+    {
+      "name": "tablet_large_portrait/enter_playing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_large_portrait/matrix 04_playing",
+      "ok": true,
+      "detail": "66472b screencap"
+    },
+    {
+      "name": "tablet_large_portrait/playing_shot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet_large_portrait/play20s",
+      "ok": true,
+      "detail": "steps=38 play_ms=19000"
+    },
+    {
+      "name": "tablet_large_portrait/game_over_state",
+      "ok": true,
+      "detail": "go ok force_ms=22500"
+    },
+    {
+      "name": "tablet_large_portrait/matrix 05_game_over",
+      "ok": true,
+      "detail": "113867b screencap"
+    },
+    {
+      "name": "tablet_large_portrait/game_over_shot",
+      "ok": true,
+      "detail": "state=game_over"
+    },
+    {
+      "name": "tablet_large_portrait/recording",
+      "ok": true,
+      "detail": "16046255 bytes"
+    }
+  ],
+  "units": [
+    {
+      "format": "phone_samsung_ultra",
+      "profile": {
+        "physW": 720,
+        "physH": 1600,
+        "density": 280,
+        "landscape": false,
+        "dpr": 3
+      },
+      "diag": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=phone_samsung_ultra&t=1784318530007",
+        "inner": [
+          412,
+          783
+        ],
+        "dpr": 1.75,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 412,
+          "ch": 783,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 412.0000305175781,
+            "h": 783.4285888671875
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "cal": {
+        "dpr": 1.75,
+        "offX": 0,
+        "offY": 126.36250000000001,
+        "physW": 720,
+        "physH": 1600,
+        "cssW": 412,
+        "cssH": 783,
+        "method": "geometric"
+      },
+      "recPath": "/code/1st-rust-game/screenshots/web/e2e/recordings/phone_samsung_ultra_touch.mp4",
+      "webgl": {
+        "ok": true,
+        "maxVUV": 1024,
+        "renderer": "ANGLE (Google (AMD), Android Emulator OpenGL ES Translator (AMD Radeon Graphics (radeonsi renoir ACO DRM 3.64 7.2.0-0.rc2.260711gdd3210c47e8d.24.fc45.x86_64)), OpenGL ES 3.1)"
+      },
+      "diag0": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=phone_samsung_ultra&t=1784318530007",
+        "inner": [
+          412,
+          783
+        ],
+        "dpr": 1.75,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 412,
+          "ch": 783,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 412.0000305175781,
+            "h": 783.4285888671875
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "qa_state_05": "game_over",
+      "got_go": true,
+      "steps": 38,
+      "play_ms": 19000,
+      "css": {
+        "w": 412,
+        "h": 783
+      },
+      "recBytes": 21121109
+    },
+    {
+      "format": "phone_samsung_ultra_landscape",
+      "profile": {
+        "physW": 1600,
+        "physH": 720,
+        "density": 280,
+        "landscape": true,
+        "dpr": 3
+      },
+      "diag": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=phone_samsung_ultra_landscape&t=1784318610631",
+        "inner": [
+          915,
+          304
+        ],
+        "dpr": 1.75,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 915,
+          "ch": 304,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 915.4285888671875,
+            "h": 304
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "cal": {
+        "dpr": 1.75,
+        "offX": 0,
+        "offY": 103.4,
+        "physW": 1600,
+        "physH": 720,
+        "cssW": 915,
+        "cssH": 304,
+        "method": "geometric"
+      },
+      "recPath": "/code/1st-rust-game/screenshots/web/e2e/recordings/phone_samsung_ultra_landscape_touch.mp4",
+      "webgl": {
+        "ok": true,
+        "maxVUV": 1024,
+        "renderer": "ANGLE (Google (AMD), Android Emulator OpenGL ES Translator (AMD Radeon Graphics (radeonsi renoir ACO DRM 3.64 7.2.0-0.rc2.260711gdd3210c47e8d.24.fc45.x86_64)), OpenGL ES 3.1)"
+      },
+      "diag0": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=phone_samsung_ultra_landscape&t=1784318610631",
+        "inner": [
+          915,
+          304
+        ],
+        "dpr": 1.75,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 915,
+          "ch": 304,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 915.4285888671875,
+            "h": 304
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "qa_state_05": "game_over",
+      "got_go": true,
+      "steps": 39,
+      "play_ms": 19000,
+      "css": {
+        "w": 915,
+        "h": 304
+      },
+      "recBytes": 19439068
+    },
+    {
+      "format": "phone_rodin",
+      "profile": {
+        "physW": 719,
+        "physH": 1600,
+        "density": 307,
+        "landscape": false,
+        "dpr": 3.25
+      },
+      "diag": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=phone_rodin&t=1784318702324",
+        "inner": [
+          375,
+          707
+        ],
+        "dpr": 1.9187500476837158,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 375,
+          "ch": 707,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 375.2442932128906,
+            "h": 707.2312622070312
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "cal": {
+        "dpr": 1.9187500476837158,
+        "offX": 0,
+        "offY": 133.89404395818713,
+        "physW": 719,
+        "physH": 1600,
+        "cssW": 375,
+        "cssH": 707,
+        "method": "geometric"
+      },
+      "recPath": "/code/1st-rust-game/screenshots/web/e2e/recordings/phone_rodin_touch.mp4",
+      "webgl": {
+        "ok": true,
+        "maxVUV": 1024,
+        "renderer": "ANGLE (Google (AMD), Android Emulator OpenGL ES Translator (AMD Radeon Graphics (radeonsi renoir ACO DRM 3.64 7.2.0-0.rc2.260711gdd3210c47e8d.24.fc45.x86_64)), OpenGL ES 3.1)"
+      },
+      "diag0": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=phone_rodin&t=1784318702324",
+        "inner": [
+          375,
+          707
+        ],
+        "dpr": 1.9187500476837158,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 375,
+          "ch": 707,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 375.2442932128906,
+            "h": 707.2312622070312
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "qa_state_05": "game_over",
+      "got_go": true,
+      "steps": 39,
+      "play_ms": 19000,
+      "css": {
+        "w": 375,
+        "h": 707
+      },
+      "recBytes": 18729997
+    },
+    {
+      "format": "phone_rodin_chrome",
+      "profile": {
+        "physW": 868,
+        "physH": 1600,
+        "density": 370,
+        "landscape": false,
+        "dpr": 3.25
+      },
+      "diag": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=phone_rodin_chrome&t=1784318777933",
+        "inner": [
+          376,
+          573
+        ],
+        "dpr": 2.3125,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 376,
+          "ch": 573,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 376.2162170410156,
+            "h": 573.4053955078125
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "cal": {
+        "dpr": 2.3125,
+        "offX": 0,
+        "offY": 151.21562500000002,
+        "physW": 868,
+        "physH": 1600,
+        "cssW": 376,
+        "cssH": 573,
+        "method": "geometric"
+      },
+      "recPath": "/code/1st-rust-game/screenshots/web/e2e/recordings/phone_rodin_chrome_touch.mp4",
+      "webgl": {
+        "ok": true,
+        "maxVUV": 1024,
+        "renderer": "ANGLE (Google (AMD), Android Emulator OpenGL ES Translator (AMD Radeon Graphics (radeonsi renoir ACO DRM 3.64 7.2.0-0.rc2.260711gdd3210c47e8d.24.fc45.x86_64)), OpenGL ES 3.1)"
+      },
+      "diag0": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=phone_rodin_chrome&t=1784318777933",
+        "inner": [
+          376,
+          573
+        ],
+        "dpr": 2.3125,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 376,
+          "ch": 573,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 376.2162170410156,
+            "h": 573.4053955078125
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "qa_state_05": "game_over",
+      "got_go": true,
+      "steps": 38,
+      "play_ms": 19000,
+      "css": {
+        "w": 376,
+        "h": 573
+      },
+      "recBytes": 20426385
+    },
+    {
+      "format": "phone_rodin_landscape",
+      "profile": {
+        "physW": 1600,
+        "physH": 719,
+        "density": 307,
+        "landscape": true,
+        "dpr": 3.25
+      },
+      "diag": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=phone_rodin_landscape&t=1784318859927",
+        "inner": [
+          834,
+          267
+        ],
+        "dpr": 1.9187500476837158,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 834,
+          "ch": 267,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 834.3973999023438,
+            "h": 267.361572265625
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "cal": {
+        "dpr": 1.9187500476837158,
+        "offX": 0,
+        "offY": 113.68155549764634,
+        "physW": 1600,
+        "physH": 719,
+        "cssW": 834,
+        "cssH": 267,
+        "method": "geometric"
+      },
+      "recPath": "/code/1st-rust-game/screenshots/web/e2e/recordings/phone_rodin_landscape_touch.mp4",
+      "webgl": {
+        "ok": true,
+        "maxVUV": 1024,
+        "renderer": "ANGLE (Google (AMD), Android Emulator OpenGL ES Translator (AMD Radeon Graphics (radeonsi renoir ACO DRM 3.64 7.2.0-0.rc2.260711gdd3210c47e8d.24.fc45.x86_64)), OpenGL ES 3.1)"
+      },
+      "diag0": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=phone_rodin_landscape&t=1784318859927",
+        "inner": [
+          834,
+          267
+        ],
+        "dpr": 1.9187500476837158,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 834,
+          "ch": 267,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 834.3973999023438,
+            "h": 267.361572265625
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "qa_state_05": "game_over",
+      "got_go": true,
+      "steps": 39,
+      "play_ms": 19000,
+      "css": {
+        "w": 834,
+        "h": 267
+      },
+      "recBytes": 17743284
+    },
+    {
+      "format": "tablet_portrait",
+      "profile": {
+        "physW": 1200,
+        "physH": 1600,
+        "density": 250,
+        "landscape": false,
+        "dpr": 2
+      },
+      "diag": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=tablet_portrait&t=1784318952104",
+        "inner": [
+          768,
+          838
+        ],
+        "dpr": 1.5625,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 768,
+          "ch": 838,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 768,
+            "h": 838.3999633789062
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "cal": {
+        "dpr": 1.5625,
+        "offX": 0,
+        "offY": 159.84375,
+        "physW": 1200,
+        "physH": 1600,
+        "cssW": 768,
+        "cssH": 838,
+        "method": "geometric"
+      },
+      "recPath": "/code/1st-rust-game/screenshots/web/e2e/recordings/tablet_portrait_touch.mp4",
+      "webgl": {
+        "ok": true,
+        "maxVUV": 1024,
+        "renderer": "ANGLE (Google (AMD), Android Emulator OpenGL ES Translator (AMD Radeon Graphics (radeonsi renoir ACO DRM 3.64 7.2.0-0.rc2.260711gdd3210c47e8d.24.fc45.x86_64)), OpenGL ES 3.1)"
+      },
+      "diag0": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=tablet_portrait&t=1784318952104",
+        "inner": [
+          768,
+          838
+        ],
+        "dpr": 1.5625,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 768,
+          "ch": 838,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 768,
+            "h": 838.3999633789062
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "qa_state_05": "game_over",
+      "got_go": true,
+      "steps": 38,
+      "play_ms": 19000,
+      "css": {
+        "w": 768,
+        "h": 838
+      },
+      "recBytes": 21458762
+    },
+    {
+      "format": "tablet_landscape",
+      "profile": {
+        "physW": 1600,
+        "physH": 1200,
+        "density": 250,
+        "landscape": true,
+        "dpr": 2
+      },
+      "diag": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=tablet_landscape&t=1784319045379",
+        "inner": [
+          1024,
+          597
+        ],
+        "dpr": 1.5625,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 1024,
+          "ch": 597,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 1024,
+            "h": 597.1199951171875
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "cal": {
+        "dpr": 1.5625,
+        "offX": 0,
+        "offY": 146.953125,
+        "physW": 1600,
+        "physH": 1200,
+        "cssW": 1024,
+        "cssH": 597,
+        "method": "geometric"
+      },
+      "recPath": "/code/1st-rust-game/screenshots/web/e2e/recordings/tablet_landscape_touch.mp4",
+      "webgl": {
+        "ok": true,
+        "maxVUV": 1024,
+        "renderer": "ANGLE (Google (AMD), Android Emulator OpenGL ES Translator (AMD Radeon Graphics (radeonsi renoir ACO DRM 3.64 7.2.0-0.rc2.260711gdd3210c47e8d.24.fc45.x86_64)), OpenGL ES 3.1)"
+      },
+      "diag0": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=tablet_landscape&t=1784319045379",
+        "inner": [
+          1024,
+          597
+        ],
+        "dpr": 1.5625,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 1024,
+          "ch": 597,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 1024,
+            "h": 597.1199951171875
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "qa_state_05": "game_over",
+      "got_go": true,
+      "steps": 38,
+      "play_ms": 19000,
+      "css": {
+        "w": 1024,
+        "h": 597
+      },
+      "recBytes": 17737059
+    },
+    {
+      "format": "tablet_large_portrait",
+      "profile": {
+        "physW": 1112,
+        "physH": 1600,
+        "density": 217,
+        "landscape": false,
+        "dpr": 2
+      },
+      "diag": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=tablet_large_portrait&t=1784319138852",
+        "inner": [
+          821,
+          986
+        ],
+        "dpr": 1.3562500476837158,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 821,
+          "ch": 987,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 820.6451416015625,
+            "h": 986.5437622070312
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "cal": {
+        "dpr": 1.3562500476837158,
+        "offX": 0,
+        "offY": 144.5055991411209,
+        "physW": 1112,
+        "physH": 1600,
+        "cssW": 821,
+        "cssH": 986,
+        "method": "geometric"
+      },
+      "recPath": "/code/1st-rust-game/screenshots/web/e2e/recordings/tablet_large_portrait_touch.mp4",
+      "webgl": {
+        "ok": true,
+        "maxVUV": 1024,
+        "renderer": "ANGLE (Google (AMD), Android Emulator OpenGL ES Translator (AMD Radeon Graphics (radeonsi renoir ACO DRM 3.64 7.2.0-0.rc2.260711gdd3210c47e8d.24.fc45.x86_64)), OpenGL ES 3.1)"
+      },
+      "diag0": {
+        "url": "http://127.0.0.1:8080/?e2e=1&qa_matrix=1&qa_go_ms=22500&format=tablet_large_portrait&t=1784319138852",
+        "inner": [
+          821,
+          986
+        ],
+        "dpr": 1.3562500476837158,
+        "fullscreen": false,
+        "canvas": {
+          "cw": 821,
+          "ch": 987,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 820.6451416015625,
+            "h": 986.5437622070312
+          }
+        },
+        "bootHidden": false,
+        "ctaDisplay": "inline-block",
+        "title": "RustyDasher"
+      },
+      "qa_state_05": "game_over",
+      "got_go": true,
+      "steps": 38,
+      "play_ms": 19000,
+      "css": {
+        "w": 821,
+        "h": 987
+      },
+      "recBytes": 16046255
+    }
+  ],
+  "recordings_dir": "/code/1st-rust-game/screenshots/web/e2e/recordings",
+  "matrix_out": "/code/1st-rust-game/screenshots/viewports",
+  "at": "2026-07-17T20:13:34.326Z",
+  "note": "Phase A handheld: adb screenrecord + adb shell input; CDP navigate/eval/PNG only"
+}

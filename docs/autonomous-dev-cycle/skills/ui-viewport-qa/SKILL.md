@@ -18,7 +18,7 @@ This file is **process only**. It must **not** record run state, progress, open
 BADs, “we already regressed,” or the current matrix size. Do not append session
 notes here. Live facts live in:
 
-- `status/session.md` (project agent home) — session goal, phase, in-progress / blocked / next
+- `status/session.md` — session goal, phase, in-progress / blocked / next
   (orchestrator + agents update this; never put this content in the skill)
 - `scripts/qa_matrix.json` — screens, formats, `expected_cells`
 - **`scripts/qa_success_criteria.json`** — **PASS/FAIL authority** (visual,
@@ -993,6 +993,6 @@ phase A, not a silent ship.
 - E2E video critique: `screenshots/web/e2e/video_critique.md`
 - Matrix PNG critique: `screenshots/viewports/matrix_critique.md`
 - Physical phone artifacts: `screenshots/web/phone/recordings/`, `touch_inventory.md`
-- Input rules: sibling skill `game-input-e2e`
+- Input rules: `skills/game-input-e2e/SKILL.md`
 - Scale: `src/ui_scale.rs` (`ViewportClass` / `classify_viewport`)
 - Pages: `.github/workflows/pages.yml`

@@ -1,0 +1,138 @@
+{
+  "matrix_formats": [
+    "phone_rodin_landscape"
+  ],
+  "play_ms": 20000,
+  "capture_matrix": true,
+  "concurrency": 1,
+  "modes": [
+    "CLASSIC",
+    "ZEN",
+    "SURVIVAL",
+    "TIMED"
+  ],
+  "difficulties": [
+    "EASY",
+    "NORMAL",
+    "HARD",
+    "INSANE"
+  ],
+  "results": [
+    {
+      "name": "phone_rodin_landscape/matrix 01_boot",
+      "ok": true,
+      "detail": "462753b"
+    },
+    {
+      "name": "phone_rodin_landscape/primary: boot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin_landscape/matrix 02_menu",
+      "ok": true,
+      "detail": "196213b"
+    },
+    {
+      "name": "phone_rodin_landscape/matrix 03_mode_select",
+      "ok": true,
+      "detail": "153794b"
+    },
+    {
+      "name": "phone_rodin_landscape/matrix 04_playing",
+      "ok": true,
+      "detail": "82645b"
+    },
+    {
+      "name": "phone_rodin_landscape/primary: play move+dash",
+      "ok": true,
+      "detail": "steps=5 play_ms=400 go=ok force_ms=10000"
+    },
+    {
+      "name": "phone_rodin_landscape/matrix 05_game_over",
+      "ok": true,
+      "detail": "126719b"
+    },
+    {
+      "name": "phone_rodin_landscape/primary: no panic",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone_rodin_landscape/primary: recording",
+      "ok": true,
+      "detail": "424f 1137605b"
+    },
+    {
+      "name": "matrix complete",
+      "ok": true,
+      "detail": "5 cells"
+    }
+  ],
+  "failed": 0,
+  "recordings": [
+    "1080p_keyboard.webm",
+    "1080p_mouse.webm",
+    "4k_keyboard.webm",
+    "4k_mouse.webm",
+    "laptop_720_keyboard.webm",
+    "laptop_720_mouse.webm",
+    "laptop_hd_keyboard.webm",
+    "laptop_hd_mouse.webm",
+    "laptop_scaled_keyboard.webm",
+    "laptop_scaled_mouse.webm",
+    "phone_android_keyboard.webm",
+    "phone_android_landscape_keyboard.webm",
+    "phone_android_landscape_touch.mp4",
+    "phone_android_landscape_touch.webm",
+    "phone_android_touch.mp4",
+    "phone_android_touch.webm",
+    "phone_iphone_promax_keyboard.webm",
+    "phone_iphone_promax_landscape_keyboard.webm",
+    "phone_iphone_promax_landscape_touch.mp4",
+    "phone_iphone_promax_landscape_touch.webm",
+    "phone_iphone_promax_touch.mp4",
+    "phone_iphone_promax_touch.webm",
+    "phone_landscape_keyboard.webm",
+    "phone_landscape_touch.mp4",
+    "phone_landscape_touch.webm",
+    "phone_large_keyboard.webm",
+    "phone_large_touch.mp4",
+    "phone_large_touch.webm",
+    "phone_portrait_keyboard.webm",
+    "phone_portrait_touch.mp4",
+    "phone_portrait_touch.webm",
+    "phone_rodin_chrome_keyboard.webm",
+    "phone_rodin_chrome_touch.mp4",
+    "phone_rodin_chrome_touch.webm",
+    "phone_rodin_keyboard.webm",
+    "phone_rodin_landscape_keyboard.webm",
+    "phone_rodin_landscape_touch.mp4",
+    "phone_rodin_landscape_touch.webm",
+    "phone_rodin_touch.mp4",
+    "phone_rodin_touch.webm",
+    "phone_samsung_ultra_keyboard.webm",
+    "phone_samsung_ultra_landscape_keyboard.webm",
+    "phone_samsung_ultra_landscape_touch.mp4",
+    "phone_samsung_ultra_landscape_touch.webm",
+    "phone_samsung_ultra_touch.mp4",
+    "phone_samsung_ultra_touch.webm",
+    "qhd_keyboard.webm",
+    "qhd_mouse.webm",
+    "tablet_landscape_keyboard.webm",
+    "tablet_landscape_touch.mp4",
+    "tablet_landscape_touch.webm",
+    "tablet_large_portrait_keyboard.webm",
+    "tablet_large_portrait_touch.mp4",
+    "tablet_large_portrait_touch.webm",
+    "tablet_portrait_keyboard.webm",
+    "tablet_portrait_touch.mp4",
+    "tablet_portrait_touch.webm"
+  ],
+  "recordings_dir": "/code/1st-rust-game/screenshots/web/e2e/recordings",
+  "stills_dir": "/code/1st-rust-game/screenshots/web/e2e/stills",
+  "matrix_out": "/code/1st-rust-game/screenshots/viewports",
+  "matrix_missing": [],
+  "at": "2026-07-17T20:02:34.153Z",
+  "note": "Unified: VIDEO + matrix PNGs (quality holds). Reviews stay separate (video_critique vs matrix_critique)."
+}

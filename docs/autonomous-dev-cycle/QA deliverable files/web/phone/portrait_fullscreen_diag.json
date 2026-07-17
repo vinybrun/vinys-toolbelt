@@ -1,0 +1,125 @@
+{
+  "cell": {
+    "id": "portrait_fullscreen",
+    "orientation": "portrait",
+    "mode": "fullscreen"
+  },
+  "diag": {
+    "url": "https://intrusting-games.github.io/rusty-dasher/?e2e=1&phone_cell=portrait_fullscreen&t=1783755501574",
+    "title": "RustyDasher",
+    "inner": [
+      375,
+      834
+    ],
+    "dpr": 3.25,
+    "fullscreen": true,
+    "orientation": "portrait-primary",
+    "vv": {
+      "w": 375.3846130371094,
+      "h": 834.4615478515625,
+      "scale": 1,
+      "ox": 0,
+      "oy": 0
+    },
+    "canvas": {
+      "cw": 375,
+      "ch": 834,
+      "bw": 938,
+      "bh": 2086,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 375.3846435546875,
+        "h": 834.4615478515625
+      }
+    },
+    "bootHidden": false,
+    "bootCta": "inline-block"
+  },
+  "pts": {
+    "portrait": true,
+    "w": 375,
+    "h": 834,
+    "stick": {
+      "x": 105,
+      "y": 692
+    },
+    "stick2": {
+      "x": 127,
+      "y": 675
+    },
+    "dash": {
+      "x": 281,
+      "y": 692
+    },
+    "stickR": 41.25,
+    "dashR": 30,
+    "stickHit": 63.9375,
+    "dashHit": 43.5,
+    "gap": 68.8125,
+    "center": {
+      "x": 187,
+      "y": 417
+    },
+    "menuConfirm": {
+      "x": 187,
+      "y": 375
+    },
+    "modeDown": {
+      "x": 187,
+      "y": 333
+    },
+    "diffLeft": {
+      "x": 112,
+      "y": 433
+    },
+    "diffRight": {
+      "x": 262,
+      "y": 433
+    },
+    "start": {
+      "x": 187,
+      "y": 567
+    },
+    "menuSwap": {
+      "x": 187,
+      "y": 733
+    }
+  },
+  "modeRes": {
+    "requested": "requested",
+    "fullscreen": false,
+    "diag": {
+      "url": "https://intrusting-games.github.io/rusty-dasher/?e2e=1&phone_cell=portrait_fullscreen&t=1783755501574",
+      "title": "RustyDasher",
+      "inner": [
+        375,
+        691
+      ],
+      "dpr": 3.25,
+      "fullscreen": false,
+      "orientation": "portrait-primary",
+      "vv": {
+        "w": 375.3846130371094,
+        "h": 691.3846435546875,
+        "scale": 1,
+        "ox": 0,
+        "oy": 0
+      },
+      "canvas": {
+        "cw": 375,
+        "ch": 691,
+        "bw": 938,
+        "bh": 1728,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 375.3846435546875,
+          "h": 691.3846435546875
+        }
+      },
+      "bootHidden": false,
+      "bootCta": "inline-block"
+    }
+  }
+}

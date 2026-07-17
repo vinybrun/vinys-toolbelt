@@ -1,0 +1,30 @@
+{
+  "url": "https://intrusting-games.github.io/rusty-dasher/",
+  "title": "RustyDasher",
+  "inner": [
+    375,
+    691
+  ],
+  "dpr": 3.25,
+  "vv": {
+    "w": 375.3846130371094,
+    "h": 691.3846435546875,
+    "scale": 1,
+    "ox": 0,
+    "oy": 0
+  },
+  "canvas": {
+    "cw": 375,
+    "ch": 691,
+    "bw": 938,
+    "bh": 1728,
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "w": 375.3846435546875,
+      "h": 691.3846435546875
+    }
+  },
+  "bootHidden": false,
+  "bootCta": "inline-block"
+}

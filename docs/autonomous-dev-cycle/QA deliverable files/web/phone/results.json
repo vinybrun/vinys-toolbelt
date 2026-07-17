@@ -1,0 +1,473 @@
+{
+  "skipped": false,
+  "matrix": [
+    {
+      "id": "portrait_browsing",
+      "orientation": "portrait",
+      "mode": "browsing"
+    },
+    {
+      "id": "portrait_fullscreen",
+      "orientation": "portrait",
+      "mode": "fullscreen"
+    },
+    {
+      "id": "landscape_browsing",
+      "orientation": "landscape",
+      "mode": "browsing"
+    },
+    {
+      "id": "landscape_fullscreen",
+      "orientation": "landscape",
+      "mode": "fullscreen"
+    }
+  ],
+  "results": [
+    {
+      "name": "devtools",
+      "ok": true,
+      "detail": "Chrome/149.0.7827.200"
+    },
+    {
+      "name": "portrait_browsing/orientation",
+      "ok": true,
+      "detail": "375x691"
+    },
+    {
+      "name": "portrait_browsing/browsing",
+      "ok": true,
+      "detail": "not fullscreen"
+    },
+    {
+      "name": "portrait_browsing/boot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "portrait_browsing/stick",
+      "ok": false,
+      "detail": "[]"
+    },
+    {
+      "name": "portrait_browsing/dash",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "portrait_browsing/multi",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "portrait_fullscreen/orientation",
+      "ok": true,
+      "detail": "375x834"
+    },
+    {
+      "name": "portrait_fullscreen/fullscreen",
+      "ok": true,
+      "detail": "active"
+    },
+    {
+      "name": "portrait_fullscreen/boot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "portrait_fullscreen/stick",
+      "ok": false,
+      "detail": "[]"
+    },
+    {
+      "name": "portrait_fullscreen/dash",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "portrait_fullscreen/multi",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "landscape_browsing/orientation",
+      "ok": true,
+      "detail": "747x279"
+    },
+    {
+      "name": "landscape_browsing/browsing",
+      "ok": true,
+      "detail": "not fullscreen"
+    },
+    {
+      "name": "landscape_browsing/boot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "landscape_browsing/stick",
+      "ok": false,
+      "detail": "[]"
+    },
+    {
+      "name": "landscape_browsing/dash",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "landscape_browsing/multi",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "landscape_fullscreen/orientation",
+      "ok": true,
+      "detail": "834x375"
+    },
+    {
+      "name": "landscape_fullscreen/fullscreen",
+      "ok": true,
+      "detail": "active"
+    },
+    {
+      "name": "landscape_fullscreen/boot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "landscape_fullscreen/stick",
+      "ok": false,
+      "detail": "[]"
+    },
+    {
+      "name": "landscape_fullscreen/dash",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "landscape_fullscreen/multi",
+      "ok": false,
+      "detail": ""
+    }
+  ],
+  "inventory": [
+    {
+      "cell": "portrait_browsing",
+      "screen": "playing(layout)",
+      "control": "virtual_stick",
+      "worked": "geometry",
+      "fatty": "good",
+      "ok": true,
+      "notes": "375x691 center=(105,573) hitR=63.9"
+    },
+    {
+      "cell": "portrait_browsing",
+      "screen": "playing(layout)",
+      "control": "dash_button",
+      "worked": "geometry",
+      "fatty": "good",
+      "ok": true,
+      "notes": "center=(281,573) hitR=43.5 gap=68.8"
+    },
+    {
+      "cell": "portrait_browsing",
+      "screen": "boot",
+      "control": "dismiss CTA",
+      "worked": "yes",
+      "fatty": "large — good",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "cell": "portrait_browsing",
+      "screen": "menu",
+      "control": "primary confirm",
+      "worked": "no event",
+      "fatty": "center — good",
+      "ok": false,
+      "notes": ""
+    },
+    {
+      "cell": "portrait_browsing",
+      "screen": "mode_select",
+      "control": "START",
+      "worked": "tapped → playing expected",
+      "fatty": "START band",
+      "ok": true,
+      "notes": "play CSS 375x691 portrait_layout=true"
+    },
+    {
+      "cell": "portrait_browsing",
+      "screen": "playing",
+      "control": "virtual stick",
+      "worked": "no events",
+      "fatty": "good",
+      "ok": false,
+      "notes": "events=0"
+    },
+    {
+      "cell": "portrait_browsing",
+      "screen": "playing",
+      "control": "DASH",
+      "worked": "no events",
+      "fatty": "good",
+      "ok": false,
+      "notes": ""
+    },
+    {
+      "cell": "portrait_browsing",
+      "screen": "playing",
+      "control": "multi stick+DASH",
+      "worked": "weak",
+      "fatty": "gap ok",
+      "ok": false,
+      "notes": "gap=68.8"
+    },
+    {
+      "cell": "portrait_fullscreen",
+      "screen": "playing(layout)",
+      "control": "virtual_stick",
+      "worked": "geometry",
+      "fatty": "good",
+      "ok": true,
+      "notes": "375x834 center=(105,692) hitR=63.9"
+    },
+    {
+      "cell": "portrait_fullscreen",
+      "screen": "playing(layout)",
+      "control": "dash_button",
+      "worked": "geometry",
+      "fatty": "good",
+      "ok": true,
+      "notes": "center=(281,692) hitR=43.5 gap=68.8"
+    },
+    {
+      "cell": "portrait_fullscreen",
+      "screen": "boot",
+      "control": "dismiss CTA",
+      "worked": "yes",
+      "fatty": "large — good",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "cell": "portrait_fullscreen",
+      "screen": "menu",
+      "control": "primary confirm",
+      "worked": "no event",
+      "fatty": "center — good",
+      "ok": false,
+      "notes": ""
+    },
+    {
+      "cell": "portrait_fullscreen",
+      "screen": "mode_select",
+      "control": "START",
+      "worked": "tapped → playing expected",
+      "fatty": "START band",
+      "ok": true,
+      "notes": "play CSS 375x834 portrait_layout=true"
+    },
+    {
+      "cell": "portrait_fullscreen",
+      "screen": "playing",
+      "control": "virtual stick",
+      "worked": "no events",
+      "fatty": "good",
+      "ok": false,
+      "notes": "events=0"
+    },
+    {
+      "cell": "portrait_fullscreen",
+      "screen": "playing",
+      "control": "DASH",
+      "worked": "no events",
+      "fatty": "good",
+      "ok": false,
+      "notes": ""
+    },
+    {
+      "cell": "portrait_fullscreen",
+      "screen": "playing",
+      "control": "multi stick+DASH",
+      "worked": "weak",
+      "fatty": "gap ok",
+      "ok": false,
+      "notes": "gap=68.8"
+    },
+    {
+      "cell": "landscape_browsing",
+      "screen": "playing(layout)",
+      "control": "virtual_stick",
+      "worked": "geometry",
+      "fatty": "good",
+      "ok": true,
+      "notes": "747x279 center=(74,145) hitR=69.2"
+    },
+    {
+      "cell": "landscape_browsing",
+      "screen": "playing(layout)",
+      "control": "dash_button",
+      "worked": "geometry",
+      "fatty": "good",
+      "ok": true,
+      "notes": "center=(672,145) hitR=52.6 gap=475.8"
+    },
+    {
+      "cell": "landscape_browsing",
+      "screen": "boot",
+      "control": "dismiss CTA",
+      "worked": "yes",
+      "fatty": "large — good",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "cell": "landscape_browsing",
+      "screen": "menu",
+      "control": "primary confirm",
+      "worked": "no event",
+      "fatty": "center — good",
+      "ok": false,
+      "notes": ""
+    },
+    {
+      "cell": "landscape_browsing",
+      "screen": "mode_select",
+      "control": "START",
+      "worked": "tapped → playing expected",
+      "fatty": "START band",
+      "ok": true,
+      "notes": "play CSS 747x279 portrait_layout=false"
+    },
+    {
+      "cell": "landscape_browsing",
+      "screen": "playing",
+      "control": "virtual stick",
+      "worked": "no events",
+      "fatty": "good",
+      "ok": false,
+      "notes": "events=0"
+    },
+    {
+      "cell": "landscape_browsing",
+      "screen": "playing",
+      "control": "DASH",
+      "worked": "no events",
+      "fatty": "good",
+      "ok": false,
+      "notes": ""
+    },
+    {
+      "cell": "landscape_browsing",
+      "screen": "playing",
+      "control": "multi stick+DASH",
+      "worked": "weak",
+      "fatty": "gap ok",
+      "ok": false,
+      "notes": "gap=475.8"
+    },
+    {
+      "cell": "landscape_fullscreen",
+      "screen": "playing(layout)",
+      "control": "virtual_stick",
+      "worked": "geometry",
+      "fatty": "good",
+      "ok": true,
+      "notes": "834x375 center=(83,195) hitR=89.9"
+    },
+    {
+      "cell": "landscape_fullscreen",
+      "screen": "playing(layout)",
+      "control": "dash_button",
+      "worked": "geometry",
+      "fatty": "good",
+      "ok": true,
+      "notes": "center=(750,195) hitR=63.8 gap=513.5"
+    },
+    {
+      "cell": "landscape_fullscreen",
+      "screen": "boot",
+      "control": "dismiss CTA",
+      "worked": "yes",
+      "fatty": "large — good",
+      "ok": true,
+      "notes": ""
+    },
+    {
+      "cell": "landscape_fullscreen",
+      "screen": "menu",
+      "control": "primary confirm",
+      "worked": "no event",
+      "fatty": "center — good",
+      "ok": false,
+      "notes": ""
+    },
+    {
+      "cell": "landscape_fullscreen",
+      "screen": "mode_select",
+      "control": "START",
+      "worked": "tapped → playing expected",
+      "fatty": "START band",
+      "ok": true,
+      "notes": "play CSS 834x375 portrait_layout=false"
+    },
+    {
+      "cell": "landscape_fullscreen",
+      "screen": "playing",
+      "control": "virtual stick",
+      "worked": "no events",
+      "fatty": "good",
+      "ok": false,
+      "notes": "events=0"
+    },
+    {
+      "cell": "landscape_fullscreen",
+      "screen": "playing",
+      "control": "DASH",
+      "worked": "no events",
+      "fatty": "good",
+      "ok": false,
+      "notes": ""
+    },
+    {
+      "cell": "landscape_fullscreen",
+      "screen": "playing",
+      "control": "multi stick+DASH",
+      "worked": "weak",
+      "fatty": "gap ok",
+      "ok": false,
+      "notes": "gap=513.5"
+    }
+  ],
+  "failed": 28,
+  "at": "2026-07-11T07:39:14.659Z",
+  "model": "2412DPC0AG",
+  "url": "https://intrusting-games.github.io/rusty-dasher/",
+  "browser": "Chrome/149.0.7827.200",
+  "cellSummaries": [
+    {
+      "id": "portrait_browsing",
+      "w": 375,
+      "h": 691,
+      "fullscreen": false
+    },
+    {
+      "id": "portrait_fullscreen",
+      "w": 375,
+      "h": 834,
+      "fullscreen": true
+    },
+    {
+      "id": "landscape_browsing",
+      "w": 747,
+      "h": 279,
+      "fullscreen": false
+    },
+    {
+      "id": "landscape_fullscreen",
+      "w": 834,
+      "h": 375,
+      "fullscreen": true
+    }
+  ]
+}

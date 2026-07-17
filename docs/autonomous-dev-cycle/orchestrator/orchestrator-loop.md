@@ -1,12 +1,3 @@
----
-name: orchestrator-loop
-description: >
-  Session orchestrator: inspect status + workflow skill, spawn workers, manage
-  concurrency against hardware, never implement work yourself. Use when the user
-  asks to orchestrate, run a session orchestrator, schedule a /loop coordinator,
-  farm work to subagents, or runs /orchestrator-loop /loop-orchestrator.
----
-
 # Orchestrator loop (session)
 
 Reusable `/loop` schedule for the session orchestrator.
@@ -60,15 +51,11 @@ Each cycle:
 
 ## Project paths this orchestrator expects
 
-Convention (map to the current project if paths differ):
-
 | Role | Path |
 |------|------|
-| Workflow skill (process only) | project skill under the agent config skills dir (e.g. `skills/ui-viewport-qa/SKILL.md`), or the plugin skill in use |
-| Live session status | agent config `status/session.md` |
-| Other status bits | agent config `status/*` (progress lists, PIDs, unit trackers) |
-
-If the project has no status dir yet, create `status/session.md` under the project agent home with goal / phase / in-progress / blocked / next — still never put that into the workflow skill.
+| Workflow skill (process only) | `skills/ui-viewport-qa/SKILL.md` (and related skills as needed) |
+| Live session status | `status/session.md` |
+| Other status bits | `status/*` (e.g. `reviewed_units.txt`, `e2e_pid`) |
 
 ## Notes
 
@@ -78,4 +65,3 @@ If the project has no status dir yet, create `status/session.md` under the proje
 - **CPU for scheduling:** always use a multi-second window (~10–30s average). Instantaneous or 1s samples mislead when Chrome/ffmpeg/AVD spike.
 - **Trust the workflow gates:** when status + skill show a true next step (e.g. A7 PASS → Phase B), spawn that work immediately. Do **not** idle waiting for the user after an honest gate PASS.
 - To change cadence only: re-run `/loop` with a different interval (and cancel the old job if still active).
-- Pair with heavy process skills (e.g. `ui-viewport-qa`) that stay stateless while this loop owns coordination.
