@@ -120,8 +120,12 @@ process only** — live matrix counts live in `scripts/qa_matrix.json`;
 
 - **e2e / emulator / phone script `PASS` or `CAPTURE_OK` / exit 0** = automation
   wrote artifacts or steps ran — **not** “looks good.”
-- **Ship requires A4b + A6** (open videos/PNGs, write critiques) then **A7**
-  (no open BADs under criteria). Never treat suite N/N as A7.
+- **Ship requires A4b + A6** (open videos/PNGs, write **per-file `*.review.json`**
+  sidecars **and** rollup critiques) then **A7** (no open BADs under criteria).
+  Never treat suite N/N as A7.
+- **Review of a file is complete only when** the agent has analyzed that
+  image/video **and** returned a sibling `*.review.json` (`verdict: all_good` or
+  `issues` with details). See **ui-viewport-qa → Per-artifact review files**.
 
 **Short version of ship order:**
 
@@ -150,15 +154,20 @@ The game is simple — **do not** run a partial happy path. Every e2e must cover
 - **All difficulties:** Easy, Normal, Hard, Insane
 - **All primary inputs** for the path (keyboard / mouse / touch stick+DASH / swap)
 - **≥20 seconds of play** with movement and dash
+- **Normal + edge input simulations** from
+  `scripts/qa_success_criteria.json` → `input_simulation_scenarios` (and
+  `review_checklist_input_sim` per modality)
 
 **Record video** of each scenario:
 - Desktop: `scripts/record.mjs` (CDP screencast → webm)
 - Handheld Phase A: **`adb shell screenrecord`** on an **Android emulator** (full display)
 - Phase C physical phone: **`adb shell screenrecord`** on the handset
 
-Review recordings (or stills) for **transient** bugs — screenshots alone are not
-enough for e2e. Handheld **play input** on Android paths must use **`adb shell
-input`**, not CDP/Puppeteer touch alone.
+**Review recordings (or stills) against `expected_video_outcome`** for each
+`SIM-*` scenario the path exercises — screenshots alone are not enough. Cite
+`SIM-*` ids on VIDEO BAD lines. CAPTURE_OK ≠ motion/dash worked. Handheld
+**play input** on Android paths must use **`adb shell input`**, not CDP/Puppeteer
+touch alone.
 
 ```bash
 # PHASE A (required before push)
@@ -198,4 +207,9 @@ node scripts/e2e_phone.mjs
 ## Fairness note
 
 Play bounds stay aspect-correct and equal-margin; do **not** break fairness when
-fixing UI.
+fixing UI. Desktop play-feel is the baseline — do **not** change desktop world
+speeds/radii/`view_height` to fix phones. Handheld fairness + fatty-finger
+controls: `scripts/qa_success_criteria.json` → **`fairness_usability`** /
+**`review_checklist_fairness`** (`F-PLAY-AREA-HANDHELD`, `F-ENTITY-CSS-SIZE`,
+`F-CROSS-TIME`, `F-STICK-SIZE`, `F-DASH-SIZE`, `F-SPEED-FEEL`, `F-DENSITY`,
+`F-NO-DESKTOP-REGRESS`).

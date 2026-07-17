@@ -18,20 +18,73 @@ This file is **process only**. It must **not** record run state, progress, open
 BADs, “we already regressed,” or the current matrix size. Do not append session
 notes here. Live facts live in:
 
-- `status/session.md` (project agent home) — session goal, phase, in-progress / blocked / next
+- `status/session.md` — session goal, phase, in-progress / blocked / next
   (orchestrator + agents update this; never put this content in the skill)
 - `scripts/qa_matrix.json` — screens, formats, `expected_cells`
 - **`scripts/qa_success_criteria.json`** — **PASS/FAIL authority** (visual,
   input, video, artifact, phase gates, per-screen checklists, criterion IDs).
   Open **before** writing any CRITIQUE/VIDEO line. Skills describe process;
   this file decides what counts as GOOD vs BAD.
-- `screenshots/viewports/matrix_critique.md` — per-cell **PNG** critiques
-- `screenshots/web/e2e/video_critique.md` — per-recording **video** critiques
-- `screenshots/web/e2e/results.json`, phone `results.json` — last run outputs
+- `screenshots/viewports/matrix_critique.md` — per-cell **PNG** critiques (rollup)
+- `screenshots/web/e2e/video_critique.md` — per-recording **video** critiques (rollup)
+- **Per-artifact review sidecars** — `*.review.json` next to each PNG/video
+  (see [Per-artifact review files](#per-artifact-review-files-required))
+- `screenshots/web/e2e/results.json`, phone `results.json` — last run **capture** outputs
 - Chat / PR / commit messages — what this session did
 
 Agents: re-read JSON (matrix **and** success criteria), status, and artifacts
 each run; never assume prior run progress.
+
+
+## Project stack map (fill in per repo)
+
+Process is stack-agnostic. Every project keeps a short map (here or in status)
+so agents do not invent paths. Example shapes:
+
+| Cycle concept | Typical locations (pick one per project) |
+|---------------|------------------------------------------|
+| Product UI | game `src/` + `dist/`; Flutter `frontend/`; SPA `web/` |
+| Matrix JSON | `scripts/qa_matrix.json` or `e2e/qa_matrix.json` |
+| **PASS/FAIL criteria** | `scripts/qa_success_criteria.json` or `e2e/qa_success_criteria.json` |
+| Desktop e2e | `scripts/e2e_inputs.mjs`, `e2e/full.js`, etc. |
+| Live post-deploy | project smoke (`e2e_phone`, `npm run live`, …) |
+| Unit tests (A1) | `cargo test` / `pytest` / `flutter test` — **layer-aware** |
+| Web build (A2) | `./scripts/web-build.sh` / `flutter build web` / `npm run build` |
+| Deploy (Phase B) | Pages `pages.yml`, VPS `deploy.yml`, etc. |
+| Input sibling skill | `game-input-e2e` (games) or `app-input-e2e` (apps) |
+
+**Rule:** map commands in this skill to the current repo. Do not hardcode a
+foreign stack. Do not drop product-UI unit tests from A1 when that layer moves.
+
+## Baseline vs full matrix (do not conflate) — and do not skip runners
+
+Imported from multi-project use (game + product app). Keep both layers honest.
+
+| Layer | What it is | Gate? |
+|-------|------------|--------|
+| **Baseline capture** | Project’s primary local suite (happy-path + critical surfaces) + post-deploy live smoke | **Always required** before/after ship |
+| **Criteria critiques** | Open success-criteria JSON; write GOOD/BAD + **`*.review.json`** on **this-run** artifacts | **Always required** (CAPTURE_OK ≠ review) |
+| **A1 units** | Layer-aware tests for changed code | **Yes** for changed layers |
+| **A2 build** | Fresh shippable web/app artifact | **Yes** when UI ships |
+| **Priority / debug subset** | Fast path (`MATRIX_FORMATS=priority`, one device, …) | **Not a substitute** for full matrix residual close |
+| **Full matrix** | Every `screens[]` × `formats[]` quality-hold PNG + VIDEO + A4b∥A6 + sidecars | **Required target** for residual close / full visual QA |
+
+### Full matrix + runners (common failure mode)
+
+1. **`qa_matrix.json` → `expected_cells` is the real matrix**, not a wishlist.
+2. **Missing or incomplete matrix runners are not a free pass.** Agents **must
+   install, implement, or finish those runners**, then run the full matrix and
+   review under criteria. Do **not** close residual by documenting “no runners.”
+3. **“Until runners land” means: make them land.** Not passive wait, optional
+   residual, or A7 without pixels.
+4. **Priority subset is debug/speed only** — never label it “full matrix done.”
+5. **Baseline still always required.** Full matrix never replaces baseline
+   suite + live + criteria reviews. Green baseline never excuses skipping
+   runners + full matrix when residual close / full visual QA is the goal.
+6. **Do not** claim A7 on suite exit 0 alone. **Do not** invent CRITIQUE lines
+   without artifacts.
+7. **Do not** remove product-UI tests from A1/A2 for the stack that owns the UI.
+
 
 ## Vocabulary — CAPTURE vs REVIEW (do not conflate)
 
@@ -45,22 +98,27 @@ had nested borders, glyph tofu, and dead chrome.
 | **results.json / emulator_results.json `ok: true`** | Same runners | Same as CAPTURE_OK for that named check | Visual or play-quality acceptance |
 | **N/N passed** in suite summary | Same runners | N capture checks ok / total checks | N units **reviewed** clean |
 | **A5 VERIFY** | `VERIFY_ONLY=1 viewport_shots` | All `expected_cells` files **exist** and non-empty | Images were opened or look correct |
-| **A4b / A6 review** | Agent opens video/stills/PNGs + writes critiques | Human-grade (agent image-tool) judgment vs `qa_success_criteria.json` | Capture succeeded |
+| **A4b / A6 review** | Agent opens video/stills/PNGs + writes **per-file `*.review.json`** + rollup critiques | Human-grade (agent image-tool) judgment vs `qa_success_criteria.json` | Capture succeeded |
+| **`*.review.json` sidecar** | Agent only, after analyzing that file | Proof **this** artifact was opened and judged (`verdict: all_good` or issues) | CAPTURE_OK; empty file; copy-paste without open |
 | **CRITIQUE / VIDEO line `BAD: none`** | A4b or A6 only | Every applicable criterion for that artifact was checked **on this-run pixels** and passed | Script printed CAPTURE_OK / PASS for that unit |
-| **A7 PRE-PROD PASS** | Agent gate after all critiques | Every unit has review lines **and** no unaccepted BAD **and** rubber-stamp spot-check clean | Suite exit 0, 105 PNGs on disk, or “15/15 capture done” |
+| **A7 PRE-PROD PASS** | Agent gate after all critiques **and** sidecars | Every required artifact has a **this-run** `*.review.json` **and** rollup lines **and** no unaccepted BAD | Suite exit 0, 105 PNGs on disk, or “15/15 capture done” |
 
 ### Hard rules
 
 1. **Capture scripts never perform visual review.** They must not write
-   `matrix_critique.md` / `video_critique.md` and must not claim A7.
+   `matrix_critique.md` / `video_critique.md` / `*.review.json` and must not claim A7.
 2. **Status / chat language:** say **“capture complete (CAPTURE_OK)”** or
    **“suite exit 0”** for runners; say **“A4b/A6 reviewed; BAD: none”** only after
-   critique lines exist with opened-image evidence. Never write “A4 PASS” alone.
+   **per-file review sidecars** + critique lines exist with opened-image evidence.
+   Never write “A4 PASS” alone.
 3. **Pipeline:** capture finish → **then** A4b ∥ A6. Artifact on disk is necessary
    for review, not sufficient for ship.
-4. **A7 inputs are critiques + criteria**, not `results.json` alone. Suite
+4. **Review of a file is complete only when** the agent has analyzed that file
+   (image tool / stills / video sample) **and** written its **`*.review.json`**.
+   A rollup CRITIQUE/VIDEO line without the sidecar is **incomplete**.
+5. **A7 inputs are sidecars + critiques + criteria**, not `results.json` alone. Suite
    `failed: 0` is a **prerequisite**, not the gate.
-5. If a worker says “15/15 PASS open_bads none” without citing **opened**
+6. If a worker says “15/15 PASS open_bads none” without **sidecars** + **opened**
    CRITIQUE/VIDEO lines under criteria ids, treat that as **unproven** until
    re-checked.
 
@@ -68,9 +126,101 @@ had nested borders, glyph tofu, and dead chrome.
 
 ```text
 BAD:  e2e 240/240 PASS  →  write BAD: none on every critique  →  A7 PASS  →  push
-GOOD: e2e CAPTURE_OK 240/240  →  open each PNG/video  →  CRITIQUE/VIDEO with evidence
-      →  only then A7 if no open BADs
+GOOD: e2e CAPTURE_OK 240/240  →  open each PNG/video  →  write *.review.json per file
+      →  CRITIQUE/VIDEO rollup  →  only then A7 if no open BADs
 ```
+
+## Per-artifact review files (required)
+
+**Format: JSON** (machine-checkable at A7; one file per reviewed media asset).
+
+Rollup markdown (`matrix_critique.md` / `video_critique.md`) is **not enough**.
+For **every** matrix PNG and **every** primary e2e recording that counts toward
+ship, the reviewing agent must produce a sidecar **after** analyzing that file.
+
+### Paths (sidecar next to artifact, same basename)
+
+| Artifact | Review sidecar |
+|----------|----------------|
+| `screenshots/viewports/{format}_{shot}.png` | `screenshots/viewports/{format}_{shot}.review.json` |
+| `screenshots/web/e2e/recordings/{name}.webm` or `.mp4` | `screenshots/web/e2e/recordings/{name}.review.json` |
+| Phase C phone `screenshots/web/phone/recordings/{cell}.mp4` | `screenshots/web/phone/recordings/{cell}.review.json` |
+
+Optional stills used only as A4b helpers may also get sidecars under
+`screenshots/web/e2e/stills/.../*.review.json` when they are the sole evidence
+opened; **primary** gate is matrix PNG + primary recording sidecars.
+
+### Schema (`*.review.json`)
+
+```json
+{
+  "artifact": "screenshots/viewports/phone_landscape_04_playing.png",
+  "artifact_kind": "matrix_png",
+  "reviewed_at": "2026-07-17T21:00:00Z",
+  "reviewer": "agent",
+  "run_start_unix": 1784321756,
+  "opened": true,
+  "verdict": "all_good",
+  "summary": "all good",
+  "issues": [],
+  "criteria_checked": ["V-STATE-MATCH", "V-PLAY-SINGLE-BORDER", "V-PLAY-CONTROLS-OUTSIDE-FIELD"],
+  "sim_scenarios_checked": []
+}
+```
+
+**With issues:**
+
+```json
+{
+  "artifact": "screenshots/web/e2e/recordings/phone_landscape_touch.mp4",
+  "artifact_kind": "e2e_video",
+  "reviewed_at": "2026-07-17T21:05:00Z",
+  "reviewer": "agent",
+  "run_start_unix": 1784321756,
+  "opened": true,
+  "verdict": "issues",
+  "summary": "Stick knob left the ring at max deflect; mid-play HUD clip",
+  "issues": [
+    { "id": "SIM-STICK-MAX-DEFLECT", "detail": "knob outside white ring ~t=12s" },
+    { "id": "VID-HUD-USABLE", "detail": "Dash 0.4s sits on bottom border" }
+  ],
+  "criteria_checked": ["VID-JOURNEY", "SIM-PLAY-STICK-NORMAL", "SIM-STICK-MAX-DEFLECT"],
+  "sim_scenarios_checked": ["SIM-PLAY-STICK-NORMAL", "SIM-STICK-MAX-DEFLECT"]
+}
+```
+
+| Field | Rules |
+|-------|--------|
+| `opened` | Must be **true**. Agent must have used image tool / stills / video sample on **this** artifact. |
+| `verdict` | **`all_good`** or **`issues`** only. |
+| `summary` | If all good: exactly short phrase like **`all good`**. If issues: human-readable what’s wrong. |
+| `issues` | Empty array when `all_good`; otherwise ≥1 objects with `id` (criterion or `SIM-*`) + `detail`. |
+| `run_start_unix` | Should match this QA pass so stale sidecars from prior runs do not count. |
+
+### When to write
+
+1. Open the artifact (image tool for PNGs; stills and/or sample video for recordings).
+2. Walk applicable criteria / `SIM-*` checklists.
+3. **Write `*.review.json` immediately** for that file.
+4. Update rollup `CRITIQUE` / `VIDEO` line (must stay consistent with sidecar `verdict` / `issues`).
+
+### Completeness rules
+
+- Review of file **F** is **incomplete** until **F.review.json** exists with
+  `opened: true` and a valid `verdict`.
+- A7 must verify sidecars exist for **all** expected matrix cells and **all**
+  required recordings for this run (mtime/`run_start_unix` fresh).
+- Sidecar `verdict: issues` ⇔ rollup line must not say `BAD: none` for that unit.
+- Sidecar `verdict: all_good` ⇔ rollup may use `BAD: none` only if still true under criteria.
+- **Do not** invent sidecars without opening the media. **Do not** batch-write
+  105 “all good” files from a directory listing.
+
+### Anti-patterns
+
+- Writing only `matrix_critique.md` / `video_critique.md` with no per-file sidecars
+- One sidecar for a whole format folder instead of one per PNG/video
+- `opened: false` or missing field while claiming review done
+- Stale sidecar from a previous `run_start_unix` reused as this-run proof
 
 ## Chain rule — always start the next task
 
@@ -116,8 +266,8 @@ waiting for a human “go ahead.”
 | A2 build | A3 serve → A4 pipeline (capture + review) |
 | One **matrix unit** **capture** done (video + matrix PNGs on disk = CAPTURE_OK only) | **Immediately** start **A4b + A6 for that unit** (review is a **separate** step — do **not** wait for other units) |
 | A4b/A6 for unit U while other units still capturing | Keep reviewing finished units; keep capture pool full |
-| All matrix units **captured** (suite may be CAPTURE_OK) | **Not done** until every unit also has A4b+A6 critique lines |
-| All matrix units captured **and** all unit critiques written | A5 verify (file presence only) → **A7** pre-prod (review gate) |
+| All matrix units **captured** (suite may be CAPTURE_OK) | **Not done** until every unit also has A4b+A6 **sidecars** + critique lines |
+| All matrix units captured **and** all unit reviews written (sidecars + rollups) | A5 verify (file presence only) → **A7** pre-prod (review gate) |
 | A7 PASS (review, not capture) | **Phase B immediately** (commit + push + Pages watch) — do not wait for user |
 | B2 deploy success | B3 live smoke; if physical phone → Phase C |
 | C phone fail | Phase A fix loop, not stop |
@@ -182,12 +332,13 @@ handheld: emulator+adb runner).
 | **Artifacts** | `screenshots/web/e2e/recordings/*.webm` (+ `stills/`) | `screenshots/viewports/{format}_{screen}.png` |
 | **Unit of review** | One recording per matrix unit × input path | One PNG per screen **cell** of that matrix unit |
 | **When to start** | **As soon as that unit’s** recording/stills exist | **As soon as that unit’s** matrix PNGs exist |
-| **Written output** | Append/update lines in `video_critique.md` | Append/update lines in `matrix_critique.md` |
+| **Written output** | Per recording: `recordings/{name}.review.json` **+** line in `video_critique.md` | Per PNG: `viewports/{cell}.review.json` **+** line in `matrix_critique.md` |
 | **Catches** | Lag, transitions, stick miss mid-play, flicker, dead controls | Layout, clipping, wrong chrome, form-factor copy, HUD |
 | **Does not replace** | Matrix PNGs / A6 | E2E videos / A4b |
 
 **Videos are not “included in” the PNG review.** Complementary, both required.
 Extracted video stills help A4b only — they are **not** matrix cells.
+**Sidecar `*.review.json` is mandatory proof** that the agent analyzed that file.
 
 ### Pipeline loop (required mental model)
 
@@ -196,11 +347,13 @@ A4 PIPELINE (matrix units from qa_matrix.json formats[]):
   start capture pool (CONCURRENCY units at a time)
   whenever matrix unit U finishes capture (video + PNGs on disk):
       IMMEDIATELY start in parallel:
-        A4b: review U's recording/stills → lines in video_critique.md
-        A6:  open U's matrix PNGs     → lines in matrix_critique.md
+        A4b: open recording/stills → write recordings/{name}.review.json
+             → append/update VIDEO line in video_critique.md
+        A6:  open each matrix PNG → write viewports/{cell}.review.json
+             → append/update CRITIQUE line in matrix_critique.md
       (do this while other units still capture / other reviews run)
-  when all units captured AND all unit reviews written:
-      A5 verify matrix complete → A7 pre-prod gate
+  when all units captured AND all sidecars + rollups written:
+      A5 verify matrix complete → A7 pre-prod gate (sidecars required)
 ```
 
 If the capture script runs as one process for all units, **do not** sit idle on
@@ -217,18 +370,19 @@ Three **phases**. Only phase A unlocks push. Phone work never replaces phase A.
 PHASE A — LOCAL ONLY (blocks push until every box is true)
   A1. cargo test / cargo check
   A2. ./scripts/web-build.sh          # wait for finish; fresh dist/
-  A3. serve dist                      # http://127.0.0.1:8080/ (also reachable by emulator via adb reverse)
+  A3. serve dist                      # http://127.0.0.1:17880/ (RUSTY_PORT; adb reverse same port)
   A4.  PIPELINE — per matrix unit (format id + CSS resolution):
         Desktop / laptop formats → Chrome + Puppeteer (e2e_inputs path)
         Handheld / touch formats → Android emulator + adb (required; see below)
         For EACH unit, as soon as its capture finishes:
-          A4b review that unit's VIDEO  → video_critique.md   ⎫ simultaneous
-          A6  review that unit's PNGs   → matrix_critique.md  ⎭ with each other
+          A4b open VIDEO → {name}.review.json + video_critique.md   ⎫ simultaneous
+          A6  open PNGs  → {cell}.review.json + matrix_critique.md  ⎭ with each other
         …while other units are still capturing / being reviewed
         Do NOT wait for all units before starting any review
+        Review incomplete without per-file *.review.json
   A5.  VERIFY matrix complete (viewport_shots.mjs VERIFY_ONLY or missing-only)
-  A7.  PRE-PROD: every unit reviewed; video BAD none + matrix BAD none
-       (or user-accepted)
+  A7.  PRE-PROD: every artifact has this-run *.review.json + rollup lines;
+       no open BADs (or user-accepted)
   ── only after A7 PASS may you commit + push ──
 
 PHASE B — PUSH + PAGES (only after A7 PASS)
@@ -255,13 +409,14 @@ PHASE C — PHYSICAL USB PHONE (only if real adb device present; after B2 succes
 | Phone against **live** before phase A finished | process | **No** |
 | Handheld matrix covered only by Chrome `page.emulate` / resized desktop | wrong capture path | **No** |
 | Critiques all say `BAD: none` without opening this-run images | rubber-stamp | **No** |
-| Full phase A: capture + **A4b+A6 review** + A5 + **A7 review PASS** | capture **and** review | **Yes** → phase B |
+| Missing `*.review.json` sidecars for PNGs/videos | incomplete review | **No** |
+| Full phase A: capture + **A4b+A6 review (sidecars + rollups)** + A5 + **A7 review PASS** | capture **and** review | **Yes** → phase B |
 
 Physical USB against local `dist` is **debug only** and never unlocks push. Phase A
 handheld ship proof is the **Android emulator** path (below), not Puppeteer-only
 device emulation.
 
-Pairs with **`game-input-e2e`**. Matrix source of truth: **`scripts/qa_matrix.json`**
+Pairs with **`game-input-e2e`** (games) or **`app-input-e2e`** (apps). Matrix source of truth: **`scripts/qa_matrix.json`**
 (read `expected_cells` / formats from that file — do not hardcode counts in
 memory or treat this skill as a live status log). **PASS/FAIL criteria source
 of truth: `scripts/qa_success_criteria.json`** (criterion ids, checklists,
@@ -285,12 +440,13 @@ You are not allowed to `git push` until **all** of these are true:
 3. **A4 pipeline review** — for **each** matrix unit, **as soon as that unit’s**
    artifacts exist: **A4b** video review **and** **A6** matrix PNG review for
    that unit (simultaneous with each other and with other units’ capture/review).
-   Critiques live in `video_critique.md` and `matrix_critique.md`. Do **not**
+   For **each** media file opened: write **`*.review.json`** sidecar, then update
+   rollup lines in `video_critique.md` / `matrix_critique.md`. Do **not**
    defer all review until the full capture job ends.
 4. **A5 — Matrix present** — all `expected_cells` PNGs exist (usually already from A4;
    `VERIFY_ONLY=1 node scripts/viewport_shots.mjs` or missing-only capture).
-5. **A7 — PRE-PROD REVIEW PASS** — every unit has critique lines; no unaccepted
-   BADs in **either** critique file.
+5. **A7 — PRE-PROD REVIEW PASS** — every required PNG/video has a this-run
+   `*.review.json` with `opened: true`; rollup lines exist; no unaccepted BADs.
 
 Partial matrices (e.g. only menu@1080p) do **not** count.
 
@@ -431,6 +587,8 @@ unit lands. **Barrier is not** “A4 capture process exit 0 before any review.�
 ### Anti-patterns (explicit)
 
 - **Treating suite `PASS` / exit 0 / N/N as visual review or A7** — that is CAPTURE_OK only
+- **Calling full matrix “optional / aspirational residual” because runners are missing** — install/build the runners, then run all `expected_cells`
+- **Closing residual with priority/debug subset only** and labeling it done
 - **Writing `BAD: none` because capture succeeded** or because a prior critique said so
 - Parallelizing across a **ship barrier** (push while A4/A7 still open) — criterion **3**
 - **Stopping after an intermediate step** without chain rule / next task
@@ -484,17 +642,30 @@ VIDEO laptop_hd_mouse: GOOD: no stick chrome, point-to-move + right-dash | BAD: 
 - Prefer opening extracted stills under `screenshots/web/e2e/stills/{recording}/`
   (several frames across the timeline) **or** sample the `.webm` if needed.
 - Listing `recordings/` is **not** review.
-- Cover **each** recording **when that matrix unit finishes**, then confirm
-  every recording in final `results.json` / on disk has a line before A7.
-- Append/update critique lines incrementally; do not hold an empty file until
-  the end of the suite.
+- Cover **each** recording **when that matrix unit finishes**:
+  1. Analyze media (image tool / stills / sample).
+  2. Write **`screenshots/web/e2e/recordings/{name}.review.json`**
+     (`verdict: all_good` or `issues` + details).
+  3. Append/update the **VIDEO** rollup line (must match sidecar).
+- Confirm before A7: every required recording has a **this-run** sidecar **and**
+  a VIDEO line.
 
 ### Video checklist (A4b)
 
 Use criterion ids from `qa_success_criteria.json` (non-exhaustive):
 `I-BOOT-DISMISS`, `I-MODE-CYCLE`, `I-START-PLAY`, `I-MOVE`, `I-DASH`,
 `I-PLAY-DURATION`, `VID-JOURNEY`, `VID-INPUT-WORKS`, `VID-NO-FLICKER`,
-`VID-HUD-USABLE`, `VID-VISUAL-SAME-AS-MATRIX` (+ any `V-PLAY-*` visible in stills).
+`VID-HUD-USABLE`, `VID-VISUAL-SAME-AS-MATRIX`, **`SIM-VIDEO-MATCHES-INPUT`**,
+**`SIM-NORMAL-PATH-COVERED`**, **`SIM-EDGE-NO-PANIC`**, **`SIM-STICK-VISUAL-FEEDBACK`**,
+**`SIM-DASH-VISUAL-FEEDBACK`** (+ any `V-PLAY-*` visible in stills).
+
+**Input simulation (required):** open
+`scripts/qa_success_criteria.json` → **`input_simulation_scenarios`**. For the
+recording’s modality, walk `review_checklist_input_sim` (keyboard_desktop /
+mouse_desktop / touch_handheld). Compare video/stills to each scenario’s
+`expected_video_outcome` (normal **and** edge). Cite **`SIM-*`** ids on BAD
+lines when outcomes fail. CAPTURE_OK step counts do **not** prove motion/dash
+feedback.
 
 `BAD` not `none` → ship blocker → fix loop (re-run A4 pipeline for affected
 units at minimum; full matrix if the bug is systemic).
@@ -533,12 +704,16 @@ CRITIQUE laptop_hd_02_menu: GOOD: keyboard control copy, no touch chrome | BAD: 
 - **GOOD** and **BAD** both required (use `BAD: none` only when **every**
   applicable criterion passes).
 - Open **each** matrix PNG with the image tool (not directory listing).
+- **Immediately** write **`screenshots/viewports/{format}_{shot}.review.json`**
+  for that PNG (`opened: true`, `verdict`, `summary` / `issues`).
+- Then append/update the **CRITIQUE** rollup line (must match sidecar).
 - Review a unit’s cells **when that unit’s capture finishes** (all
   `{format_id}_0*.png` for that format id), not only after the whole matrix.
 - User may accept residual BADs in writing **by criterion id**; document that
   at ship time.
 - Filename is not state proof (`*_04_playing` showing menu → `V-STATE-MATCH` /
   `A-LABEL-TRUTH` FAIL).
+- **No sidecar = that PNG is not reviewed**, even if a CRITIQUE line exists.
 
 ### Matrix PNG checklist (A6)
 
@@ -551,7 +726,14 @@ screen id. High-signal blockers (non-exhaustive):
 **Menu / mode / GO** — `V-GHOST-FIELD`, `V-PANEL-IN-CANVAS`, `V-MODE-START-CLEAR`  
 **Playing** — `V-PLAY-SINGLE-BORDER`, `V-PLAY-NO-SIDE-DIM-SLABS`,
 `V-PLAY-ENTITIES-IN-BOUNDS`, `V-PLAY-NO-WEIRD-POLYGONS`,
-`V-PLAY-CONTROLS-OUTSIDE-FIELD` / `V-PLAY-DESKTOP-NO-STICK`, `V-PLAY-HUD-CLEAR`
+`V-PLAY-CONTROLS-OUTSIDE-FIELD` / `V-PLAY-DESKTOP-NO-STICK`, `V-PLAY-HUD-CLEAR`  
+**Playing fairness / usability (F-\*)** — also walk
+`review_checklist_fairness` in `qa_success_criteria.json`: handheld
+`F-PLAY-AREA-HANDHELD`, `F-ENTITY-CSS-SIZE`, `F-CROSS-TIME`, `F-STICK-SIZE`,
+`F-DASH-SIZE`, `F-SPEED-FEEL`, `F-DENSITY`; desktop `F-NO-DESKTOP-REGRESS` (+
+`F-SPEED-FEEL`). Priority formats: `phone_rodin_chrome`, short-height landscape,
+desktop baseline. Mid-play stills for density. Desktop is baseline — do not
+regress it to fix phones.
 
 `BAD` not `none` → ship blocker → fix loop.
 
@@ -570,21 +752,25 @@ screen id. High-signal blockers (non-exhaustive):
 
 1. Confirm capture prerequisites (CAPTURE_OK): expected recordings + matrix
    PNGs on disk; suite failed count 0 for the ship paths used this run.
-2. Open **`scripts/qa_success_criteria.json`** (criteria authority) plus
+2. Confirm **per-artifact review sidecars**: every expected matrix PNG and every
+   required recording has a sibling **`*.review.json`** with `opened: true`,
+   valid `verdict`, and `run_start_unix` (or mtime) for **this** pass.
+3. Open **`scripts/qa_success_criteria.json`** (criteria authority) plus
    **both** `screenshots/web/e2e/video_critique.md` **and**
    `screenshots/viewports/matrix_critique.md`.
-3. Confirm **every** matrix cell and **every** required recording has a
+4. Confirm **every** matrix cell and **every** required recording has a
    CRITIQUE/VIDEO line for **this run** (not only that files exist).
-4. Collect every line in **either** critique file where `BAD:` is not exactly
-   `none` (or still cites unaccepted criterion ids).
-5. Spot-check that this-run artifacts do not still match
-   `known_fail_examples` in the criteria file while critiques say `BAD: none`
-   (rubber-stamp detector — open the PNG/stills with the image tool).
-6. **If capture prereqs hold, both BAD lists empty, and spot-check is clean**
-   → **PRE-PROD REVIEW: PASS**. **Immediately** proceed to Phase B — do not
-   wait for the user.
-7. **If capture incomplete, any BAD remains, or rubber-stamp spot-check fails**
-   → **PRE-PROD REVIEW: FAIL**. Do **not** push. Fix loop:
+5. Collect every line in **either** critique file where `BAD:` is not exactly
+   `none` (or still cites unaccepted criterion ids). Also treat any sidecar
+   `verdict: issues` as an open BAD if not reflected/fixed.
+6. Spot-check that this-run artifacts do not still match
+   `known_fail_examples` in the criteria file while critiques/`all_good` sidecars
+   claim clean (rubber-stamp detector — open the PNG/stills with the image tool).
+7. **If capture prereqs hold, sidecars complete, both BAD lists empty, and
+   spot-check is clean** → **PRE-PROD REVIEW: PASS**. **Immediately** proceed
+   to Phase B — do not wait for the user.
+8. **If capture incomplete, sidecars missing, any BAD remains, or rubber-stamp
+   spot-check fails** → **PRE-PROD REVIEW: FAIL**. Do **not** push. Fix loop:
 
 ```text
 START OF FIX LOOP
@@ -596,7 +782,7 @@ START OF FIX LOOP
      screenrecord + adb shell input (CONCURRENCY=<N> as hardware allows)
      — as EACH matrix unit finishes: A4b + A6 for that unit immediately
   6. VERIFY_ONLY=1 node scripts/viewport_shots.mjs               # A5 verify
-  7. Confirm every unit has critique lines; rewrite any stale lines
+  7. Confirm every unit has *.review.json sidecars + critique lines; rewrite stale
   8. Return to this pre-prod review gate
 END LOOP — until every BAD is "none" (or user-accepted in writing)
 ```
@@ -608,12 +794,14 @@ END LOOP — until every BAD is "none" (or user-accepted in writing)
 - **Do not** treat e2e / emulator **exit 0**, **N/N PASS**, or **CAPTURE_OK** as
   ship-ready or as A7 — those are capture only.
 - **Do not** treat A5 “files present” as visual inspection.
-- **Do not** copy `BAD: none` from a previous run without re-opening this-run artifacts.
+- **Do not** treat rollup CRITIQUE/VIDEO alone as complete without **`*.review.json`**.
+- **Do not** write `*.review.json` without opening that artifact (`opened` must be true).
+- **Do not** copy `BAD: none` / `all_good` from a previous run without re-opening this-run artifacts.
 - **Do not** skip A4b because A6 PNG review “looks fine.”
 - **Do not** skip A6 because “videos already cover it.”
 - **Do not** wait for the entire capture suite before reviewing finished units.
 - **Do not** re-run a full second matrix walk when A4 already wrote all cells.
-- **Do not** delete BAD lines to silence the gate.
+- **Do not** delete BAD lines or sidecars to silence the gate.
 - **Do not** leave headless Chrome/Puppeteer orphans.
 - **Do not** wait for the user after a true **PRE-PROD REVIEW: PASS** — proceed to
   Phase B (commit + push + deploy watch) per the chain rule.
@@ -623,6 +811,7 @@ END LOOP — until every BAD is "none" (or user-accepted in writing)
 ```text
 CAPTURE: OK | FAIL   (suite exit / artifacts present — not visual)
 A5_presence: OK | FAIL
+sidecar_reviews: OK | FAIL   (every required PNG/video has this-run *.review.json, opened:true)
 PRE-PROD REVIEW (A7): PASS | FAIL
 open_bads_video: N
 open_bads_matrix: N
@@ -668,9 +857,10 @@ Artifact: `screenshots/viewports/{format_id}_{shot_suffix}.png`
 `viewport_shots.mjs` writes `screenshots/viewports/matrix_results.json` and
 **exits non-zero** if any expected file is missing/empty.
 
-**Game over capture:** shots use `http://127.0.0.1:8080/?qa_matrix=1` so the game
-forces Game Over after a short play (`world::qa_matrix_force_gameover`). Normal
-players without that query are unaffected.
+**Game over capture:** shots use `http://127.0.0.1:17880/?qa_matrix=1` (default
+local port; override `RUSTY_PORT` / `E2E_URL`) so the game forces Game Over after
+a short play (`world::qa_matrix_force_gameover`). Normal players without that
+query are unaffected.
 
 ### Why resolution criteria exist (durable rules)
 
@@ -682,6 +872,15 @@ players without that query are unaffected.
 6. **High end** — QHD + 4K so UI does not become huge or sparse.
 
 ---
+
+### Reference layout note
+
+Script names (`e2e_inputs.mjs`, `viewport_shots.mjs`, `qa_matrix.json`) and
+paths under `screenshots/` are the **reference layout** from the cycle that
+proved this process. Map them to the current project (`e2e/`, Flutter web,
+Pages vs VPS, port overrides, etc.). The **process** (pipeline, sidecars,
+CAPTURE vs REVIEW, emulator handhelds, baseline vs full matrix) is mandatory;
+exact filenames are not.
 
 ## Builds — wait as long as needed
 
@@ -710,13 +909,13 @@ cargo test -q && cargo check
 ./scripts/web-build.sh
 
 # A3
-./scripts/web-serve-dist.sh   # http://127.0.0.1:8080/
+./scripts/web-serve-dist.sh   # http://127.0.0.1:17880/
 
 # A4 PIPELINE — per matrix unit (format id + CSS resolution):
 # Desktop / laptop (keyboard+mouse):
 CAPTURE_MATRIX=1 CONCURRENCY=<N> node scripts/e2e_inputs.mjs
 # Handheld / touch (REQUIRED for ship): Android emulator + adb
-#   - boot AVD(s); adb reverse tcp:8080 tcp:8080
+#   - boot AVD(s); adb reverse tcp:17880 tcp:17880
 #   - full-display: adb shell screenrecord …
 #   - touches: adb shell input tap|swipe … (not CDP/Puppeteer touch)
 #   - same pipeline: as each unit finishes → A4b ∥ A6 immediately
@@ -725,19 +924,20 @@ CAPTURE_MATRIX=1 CONCURRENCY=<N> node scripts/e2e_inputs.mjs
 
 # → as each unit finishes:
 #     recordings for that unit + viewports/{format_id}_*.png (+ stills if any)
-#     IMMEDIATELY: A4b review that unit's video  → video_critique.md
-#                  A6  review that unit's PNGs   → matrix_critique.md
+#     IMMEDIATELY: A4b open video → recordings/{name}.review.json + VIDEO line
+#                  A6  open PNGs  → viewports/{cell}.review.json + CRITIQUE line
 #     (while other units still capture / review)
+#     Review incomplete without per-file *.review.json
 
 # A5 — verify matrix complete (no-op capture if A4 filled all cells)
 VERIFY_ONLY=1 node scripts/viewport_shots.mjs
 # If missing cells only: CONCURRENCY=<N> node scripts/viewport_shots.mjs
 
-# A7 — PRE-PROD: every unit reviewed; both critique files clean
+# A7 — PRE-PROD: every artifact has this-run *.review.json + clean rollups
 ```
 
 Optional during A (debug only, **not** a ship gate): physical USB handset via
-`adb reverse tcp:8080 tcp:8080`. Still must finish full A4–A7 (including **emulator**
+`adb reverse tcp:17880 tcp:17880`. Still must finish full A4–A7 (including **emulator**
 handhelds) before push.
 
 ### Phase B — after A7 PASS
@@ -872,7 +1072,7 @@ Device (AVD) / Android emulator**, not desktop Chrome device-emulation alone.
 | Layer | Requirement |
 |-------|-------------|
 | Runtime | **Android emulator** (AVD) booted and visible to `adb devices` as an emulator |
-| App under test | Chrome (or system WebView browser) on the emulator loading **local** `dist` (typically `adb reverse tcp:8080 tcp:8080` → `http://127.0.0.1:8080/`) |
+| App under test | Chrome (or system WebView browser) on the emulator loading **local** `dist` (typically `adb reverse tcp:17880 tcp:17880` → `http://127.0.0.1:17880/`) |
 | Video | **Full-display** recording via **`adb shell screenrecord`** (entire emulator screen, including browser chrome / system UI as shown — not a Puppeteer CDP canvas-only screencast) |
 | Input | **OS-level simulated touches** via **`adb shell input`** (`tap`, `swipe`, etc.), calibrated CSS → physical coordinates. **Do not** rely on Chrome CDP / Puppeteer touch injection for ship-valid handheld play |
 | Navigate / diagnose | CDP (`scripts/cdp.mjs` or equivalent) may open URLs and evaluate JS; **input for play must stay on adb** |
@@ -949,10 +1149,12 @@ phase A, not a silent ship.
 - Build skipped or still running when tests “passed”
 - Fewer than **expected_cells** matrix screenshots
 - Any matrix cell not **visually inspected** (A6) **or** missing a matrix CRITIQUE line
+  **or** missing `{cell}.review.json` sidecar
 - E2E not run on every format **or** A4b video review skipped / missing `video_critique.md`
+  **or** missing `{recording}.review.json` sidecar
 - E2E skipped full surface (not all modes/difficulties/controls or &lt;20s play)
 - E2E has no video recordings
-- **Only CAPTURE_OK** (suite exit 0 / N/N) without completed A4b+A6+A7 review
+- **Only CAPTURE_OK** (suite exit 0 / N/N) without completed A4b+A6 sidecars+A7 review
 - Phone/tablet tested only as resized desktop windows or Chrome `page.emulate` (no **Android emulator** path)
 - Handheld A4 without **full-display** `adb shell screenrecord` and **`adb shell input`** touches
 - **Pushed after physical-phone adb reverse only** (no full local matrix + e2e, including emulator handhelds)
@@ -973,10 +1175,11 @@ phase A, not a silent ship.
 2. **Phase A review:** confirmation that A4b+A6 were **pipelined per matrix unit**
    (not batch-only) + paths to `video_critique.md` and `matrix_critique.md`
 3. Confirmation that **all** e2e recordings **and** all matrix PNGs were **opened
-   and reviewed** (not merely listed)
-4. **PRE-PROD REVIEW: PASS|FAIL** with `open_bads_video` + `open_bads_matrix`; residual only if user-accepted by criterion id
+   and reviewed** with **`*.review.json` sidecars** (not merely listed)
+4. **PRE-PROD REVIEW: PASS|FAIL** with `sidecar_reviews` + `open_bads_video` +
+   `open_bads_matrix`; residual only if user-accepted by criterion id
 5. **Phase B:** commit hash + push + Pages run id/URL + **success** + live URL
-6. **Phase C (if physical phone):** inventory + phone video **review** — or “no device / skipped”
+6. **Phase C (if physical phone):** inventory + phone video **review** + sidecars — or “no device / skipped”
 7. Confirmation that Phase A **handheld** units used **Android emulator** + full-display
    **screenrecord** + **adb shell input** (not Chrome-emulation-only)
 
@@ -992,7 +1195,8 @@ phase A, not a silent ship.
 - Emulator/physical phone tooling: `scripts/e2e_phone.mjs` / `scripts/cdp.mjs` (adapt for local emulator + reverse in Phase A)
 - E2E video critique: `screenshots/web/e2e/video_critique.md`
 - Matrix PNG critique: `screenshots/viewports/matrix_critique.md`
+- **Per-file reviews:** `screenshots/viewports/*.review.json`, `screenshots/web/e2e/recordings/*.review.json`
 - Physical phone artifacts: `screenshots/web/phone/recordings/`, `touch_inventory.md`
-- Input rules: sibling skill `game-input-e2e`
+- Input rules: `skills/game-input-e2e/SKILL.md`
 - Scale: `src/ui_scale.rs` (`ViewportClass` / `classify_viewport`)
 - Pages: `.github/workflows/pages.yml`

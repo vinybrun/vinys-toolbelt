@@ -1,3 +1,12 @@
+---
+name: orchestrator-loop
+description: >
+  Session orchestrator: inspect status + workflow skill, spawn workers, manage
+  concurrency against hardware, never implement work yourself. Use when the user
+  asks to orchestrate, run a session orchestrator, schedule a /loop coordinator,
+  farm work to subagents, or runs /orchestrator-loop /loop-orchestrator.
+---
+
 # Orchestrator loop (session)
 
 Reusable `/loop` schedule for the session orchestrator.
@@ -35,6 +44,8 @@ Each cycle:
    - Only schedule work that still makes sense per skill + status. Avoid duplicate jobs and processes that no longer serve the workflow. Prefer the right device for the job (GPU for GPU-bound work, CPU for CPU-bound; don’t pin useless load on a contended resource).
 7. From status + skill, if required work is unfinished or not running, start those tasks (when resources allow) and update the status files.
    - **Trust the workflow gates:** when evidence on disk + skill criteria show a true next phase (e.g. A7 PASS → Phase B commit/push/deploy watch), **start it immediately**. Do **not** idle waiting for the user after an honest gate PASS. Still never skip or weaken a failed gate.
+   - **CAPTURE_OK ≠ A7:** suite exit 0 / N/N PASS is capture only. A7 needs per-artifact `*.review.json` sidecars (when the skill requires them) + rollup critiques with no open BADs. Do not spawn Phase B on capture green alone.
+   - **Missing matrix runners:** if status shows residual blocked on missing runners, spawn work to **build/finish runners** and run full `expected_cells` — do not park as optional residual.
 8. Short report: skill edits (if any), status-file edits, tasks kept/stopped/started, **concurrency adjustments (old → new + why)**, hardware snapshot (**windowed CPU%** vs 50–80% target + window length, temp vs ~80°C if known) + scheduling rationale, unfinished gaps closed, next focus.
 ```
 
@@ -51,11 +62,16 @@ Each cycle:
 
 ## Project paths this orchestrator expects
 
+Convention (map to the current project if paths differ):
+
 | Role | Path |
 |------|------|
-| Workflow skill (process only) | `skills/ui-viewport-qa/SKILL.md` (and related skills as needed) |
-| Live session status | `status/session.md` |
-| Other status bits | `status/*` (e.g. `reviewed_units.txt`, `e2e_pid`) |
+| Workflow skill (process only) | `skills/ui-viewport-qa/SKILL.md` (plus `game-input-e2e` or `app-input-e2e`) |
+| Criteria | project `qa_success_criteria.json` |
+| Live session status | `status/session.md` under project agent home |
+| Other status bits | `status/*` (progress lists, PIDs, unit trackers, worker reports) |
+
+If the project has no status dir yet, create `status/session.md` with goal / phase / in-progress / blocked / next — still never put that into the workflow skill.
 
 ## Notes
 
@@ -65,3 +81,4 @@ Each cycle:
 - **CPU for scheduling:** always use a multi-second window (~10–30s average). Instantaneous or 1s samples mislead when Chrome/ffmpeg/AVD spike.
 - **Trust the workflow gates:** when status + skill show a true next step (e.g. A7 PASS → Phase B), spawn that work immediately. Do **not** idle waiting for the user after an honest gate PASS.
 - To change cadence only: re-run `/loop` with a different interval (and cancel the old job if still active).
+- Pair with heavy process skills (`ui-viewport-qa`, input e2e) that stay stateless while this loop owns coordination.

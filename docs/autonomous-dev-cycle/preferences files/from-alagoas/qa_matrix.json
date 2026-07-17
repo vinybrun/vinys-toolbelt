@@ -1,58 +1,70 @@
 {
-  "description": "Full UI/UX QA matrix: every screen \u00d7 every format. Sizes are CSS viewports (logical px). Flagship phones use high DPR + their CSS size \u2014 NOT physical panel resolution (e.g. Pro Max is 440\u00d7956 CSS, not 1320\u00d72868).",
+  "description": "Full UI/UX QA matrix for Compre Barato Alagoas: every product screen × every format. CSS viewports (logical px).",
   "selection_rationale": {
-    "phone_android": "360\u00d7800 \u2014 top Android CSS viewport (StatCounter mobile)",
-    "phone_android_landscape": "800\u00d7360 \u2014 same device rotated",
-    "phone_portrait": "390\u00d7844 \u2014 iPhone 12\u201314 CSS",
-    "phone_landscape": "844\u00d7390 \u2014 iPhone landscape",
-    "phone_large": "430\u00d7932 \u2014 iPhone 15/16 Plus & 15 Pro Max-class CSS",
-    "tablet_portrait": "768\u00d71024 \u2014 classic iPad / common tablet portrait",
-    "tablet_landscape": "1024\u00d7768 \u2014 classic iPad landscape (4:3, must stay tablet)",
-    "tablet_large_portrait": "820\u00d71180 \u2014 modern iPad Air-class CSS",
-    "laptop_hd": "1366\u00d7768 \u2014 budget laptop HD (critical; was misclassified as tablet)",
-    "laptop_scaled": "1536\u00d7864 \u2014 1920\u00d71080 at Windows 125% scale",
-    "laptop_720": "1280\u00d7720 \u2014 entry HD laptop / small window",
-    "1080p": "1920\u00d71080 \u2014 default Full HD desktop/laptop",
-    "qhd": "2560\u00d71440 \u2014 QHD monitors / high-end laptops",
-    "4k": "3840\u00d72160 \u2014 4K desktop reference",
-    "phone_iphone_promax": "440\u00d7956 \u2014 iPhone 16 Pro Max CSS points (physical 1320\u00d72868 @3x is not the layout size)",
-    "phone_iphone_promax_landscape": "956\u00d7440 \u2014 Pro Max landscape CSS",
-    "phone_samsung_ultra": "412\u00d7915 \u2014 Galaxy Ultra-class CSS (physical ~1440\u00d73120 is not the layout size)",
-    "phone_samsung_ultra_landscape": "915\u00d7412 \u2014 Ultra landscape CSS",
-    "phone_rodin": "375x834 @3.25 \u2014 lab USB device 2412DPC0AG (rodin) full-screen CSS from physical 1220x2712 / 3.25",
-    "phone_rodin_chrome": "375x691 @3.25 \u2014 measured Chrome tab viewport on same device (browser chrome shrinks height); primary repro for touch mapping",
-    "phone_rodin_landscape": "834x375 @3.25 \u2014 rodin landscape full CSS"
+    "phone_android": "360×800 — top Android CSS viewport (StatCounter mobile)",
+    "phone_android_landscape": "800×360 — same device rotated",
+    "phone_portrait": "390×844 — iPhone 12–14 CSS",
+    "phone_landscape": "844×390 — iPhone landscape",
+    "phone_large": "430×932 — iPhone 15/16 Plus & 15 Pro Max-class CSS",
+    "tablet_portrait": "768×1024 — classic iPad / common tablet portrait",
+    "tablet_landscape": "1024×768 — classic iPad landscape (4:3, must stay tablet)",
+    "tablet_large_portrait": "820×1180 — modern iPad Air-class CSS",
+    "laptop_hd": "1366×768 — budget laptop HD (critical; was misclassified as tablet)",
+    "laptop_scaled": "1536×864 — 1920×1080 at Windows 125% scale",
+    "laptop_720": "1280×720 — entry HD laptop / small window",
+    "1080p": "1920×1080 — default Full HD desktop/laptop",
+    "qhd": "2560×1440 — QHD monitors / high-end laptops",
+    "4k": "3840×2160 — 4K desktop reference",
+    "phone_iphone_promax": "440×956 — iPhone 16 Pro Max CSS points (physical 1320×2868 @3x is not the layout size)",
+    "phone_iphone_promax_landscape": "956×440 — Pro Max landscape CSS",
+    "phone_samsung_ultra": "412×915 — Galaxy Ultra-class CSS (physical ~1440×3120 is not the layout size)",
+    "phone_samsung_ultra_landscape": "915×412 — Ultra landscape CSS",
+    "phone_rodin": "375x834 @3.25 — lab USB device 2412DPC0AG (rodin) full-screen CSS from physical 1220x2712 / 3.25",
+    "phone_rodin_chrome": "375x691 @3.25 — measured Chrome tab viewport on same device (browser chrome shrinks height); primary repro for touch mapping",
+    "phone_rodin_landscape": "834x375 @3.25 — rodin landscape full CSS"
   },
   "screens": [
     {
-      "id": "boot",
-      "label": "Boot / download overlay",
-      "source": "index.html #boot",
-      "shot_suffix": "01_boot"
+      "id": "home",
+      "label": "App home / search",
+      "source": "frontend SearchScreen",
+      "shot_suffix": "01_home"
     },
     {
-      "id": "menu",
-      "label": "Main menu",
-      "source": "GameState::Menu",
-      "shot_suffix": "02_menu"
+      "id": "results",
+      "label": "Results / ranked stores",
+      "source": "frontend ResultsScreen",
+      "shot_suffix": "02_results"
     },
     {
-      "id": "mode_select",
-      "label": "Mode select",
-      "source": "GameState::ModeSelect",
-      "shot_suffix": "03_mode_select"
+      "id": "map",
+      "label": "Map / store locations",
+      "source": "frontend MapScreen",
+      "shot_suffix": "03_map"
     },
     {
-      "id": "playing",
-      "label": "Playing / HUD",
-      "source": "GameState::Playing",
-      "shot_suffix": "04_playing"
+      "id": "settings",
+      "label": "Settings / privacy",
+      "source": "frontend settings + privacy sheets",
+      "shot_suffix": "04_settings"
     },
     {
-      "id": "game_over",
-      "label": "Game over",
-      "source": "GameState::GameOver",
-      "shot_suffix": "05_game_over"
+      "id": "share",
+      "label": "Share / savings",
+      "source": "frontend share flow",
+      "shot_suffix": "05_share"
+    },
+    {
+      "id": "admin",
+      "label": "Admin panel",
+      "source": "admin-frontend/",
+      "shot_suffix": "06_admin"
+    },
+    {
+      "id": "docs",
+      "label": "Docs site",
+      "source": "docs/",
+      "shot_suffix": "07_docs"
     }
   ],
   "formats": [
@@ -65,7 +77,7 @@
       "touch": true,
       "input_primary": "touch",
       "expected_class": "PhonePortrait",
-      "notes": "360\u00d7800 CSS common Android (incl. many Galaxy non-Ultra)"
+      "notes": "360×800 CSS common Android (incl. many Galaxy non-Ultra)"
     },
     {
       "id": "phone_android_landscape",
@@ -86,7 +98,7 @@
       "touch": true,
       "input_primary": "touch",
       "expected_class": "PhonePortrait",
-      "notes": "390\u00d7844 CSS (iPhone 12\u201314 / 16e class)"
+      "notes": "390×844 CSS (iPhone 12–14 / 16e class)"
     },
     {
       "id": "phone_landscape",
@@ -107,7 +119,7 @@
       "touch": true,
       "input_primary": "touch",
       "expected_class": "PhonePortrait",
-      "notes": "430\u00d7932 CSS (iPhone 15/16 Plus & earlier Pro Max class)"
+      "notes": "430×932 CSS (iPhone 15/16 Plus & earlier Pro Max class)"
     },
     {
       "id": "phone_iphone_promax",
@@ -118,7 +130,7 @@
       "touch": true,
       "input_primary": "touch",
       "expected_class": "PhonePortrait",
-      "notes": "CSS viewport 440\u00d7956; physical ~1320\u00d72868 @3x \u2014 not used for layout"
+      "notes": "CSS viewport 440×956; physical ~1320×2868 @3x — not used for layout"
     },
     {
       "id": "phone_iphone_promax_landscape",
@@ -140,7 +152,7 @@
       "touch": true,
       "input_primary": "touch",
       "expected_class": "PhonePortrait",
-      "notes": "CSS ~412\u00d7915; physical often 1440\u00d73120+ \u2014 layout uses CSS"
+      "notes": "CSS ~412×915; physical often 1440×3120+ — layout uses CSS"
     },
     {
       "id": "phone_samsung_ultra_landscape",
@@ -218,7 +230,7 @@
     },
     {
       "id": "laptop_hd",
-      "label": "Budget laptop HD 1366\u00d7768",
+      "label": "Budget laptop HD 1366×768",
       "width": 1366,
       "height": 768,
       "dpr": 1,
@@ -228,7 +240,7 @@
     },
     {
       "id": "laptop_scaled",
-      "label": "Laptop 1080p @ 125% (1536\u00d7864)",
+      "label": "Laptop 1080p @ 125% (1536×864)",
       "width": 1536,
       "height": 864,
       "dpr": 1,
@@ -277,11 +289,16 @@
       "expected_class": "Desktop4k"
     }
   ],
-  "expected_cells": 105,
-  "artifact_pattern": "screenshots/viewports/{format}_{shot_suffix}.png",
-  "critique_file": "screenshots/viewports/matrix_critique.md",
-  "success_criteria": "scripts/qa_success_criteria.json",
-  "success_criteria_note": "PASS/FAIL authority for A4b/A6 + A7. Open before writing CRITIQUE/VIDEO or *.review.json sidecars. Review of each PNG/video is complete only with sibling *.review.json (opened:true, all_good|issues). CAPTURE_OK is not review. A4b also checks input_simulation_scenarios (SIM-*).",
-  "e2e_note": "Exhaustive e2e_inputs.mjs: every mode, difficulty, screen, primary input, and >=20s play. PRIMARY artifact is VIDEO (recordings/). CAPTURE only (CAPTURE_OK logs). Reviews: video_critique + matrix_critique. Handheld ship path: Android emulator + adb screenrecord/input. Phone Phase C: e2e_phone.mjs 2x2 video via adb screenrecord.",
-  "phone_device_note": "Phone formats: device emulation on PC. USB phone: e2e_phone.mjs after live deploy \u2014 2x2 portrait|landscape x browsing|fullscreen, adb screenrecord video, adb calibrated taps, exhaustive control surface + 20s play."
+  "expected_cells": 147,
+  "artifact_pattern": "e2e/screenshots/viewports/{format}_{shot_suffix}.png",
+  "critique_file": "e2e/screenshots/viewports/matrix_critique.md",
+  "success_criteria": "e2e/qa_success_criteria.json",
+  "e2e_note": "full.js / live.js producers. PASS/FAIL: e2e/qa_success_criteria.json. Desktop Puppeteer; handheld Phase A emulator+adb.",
+  "phone_device_note": "Chrome emulate = layout assist only. Phase A handheld ship = emulator+adb. Phase C = physical after live deploy.",
+  "live_hosts": {
+    "app": "https://alagoas.precospublicos.ia.br",
+    "docs": "https://docs.alagoas.precospublicos.ia.br",
+    "admin": "https://admin.alagoas.precospublicos.ia.br"
+  },
+  "imported_from": "vinys-toolbelt/docs/autonomous-dev-cycle (2026-07-17)"
 }
